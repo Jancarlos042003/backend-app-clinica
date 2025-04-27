@@ -1,6 +1,6 @@
 package com.proyecto.appclinica.exception;
 
-import com.clinica.postalta.model.dto.ApiResponse;
+import com.proyecto.appclinica.model.dto.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;

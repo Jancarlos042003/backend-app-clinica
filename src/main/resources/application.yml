@@ -6,10 +6,10 @@ spring:
     name: backend-app-clinica
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:app_clinica}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:123456}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
@@ -22,10 +22,10 @@ spring:
 
   data:
     redis:
-      port: ${REDIS_PORT:6379}
+      port: ${REDIS_PORT}
       host: ${REDIS_HOST}
       password: ${REDIS_PASSWORD}
-      timeout: 5000 # Configuración de tiempos (milisegundos) de conexión
+      timeout: 5000 # Configuracion de tiempos (milisegundos) de conexion
       client-type: lettuce  # Opcional: especificar si usas lettuce o jedis
       lettuce:
         client-name: my-redis-client  # Opcional si solo quieres darle nombre a tu cliente
@@ -42,13 +42,13 @@ logging:
     root: INFO
     org.springframework.web: DEBUG
 
-# Configuración del servidor FHIR
+# Configuracion del servidor FHIR
 fhir:
   server:
     url: ${FHIR_SERVER_URL:http://localhost:8080/fhir}
     token:
 
-# Configuración JWT
+# Configuracion JWT
 jwt:
   secret-key: ${SECRET_KEY}
   expiration: ${EXPIRATION_TIME}
