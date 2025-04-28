@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class FhirRepository {
+public class FhirPatientRepository {
     private final IGenericClient fhirClient;
 
     public boolean patientExistsByIdentifier(String identifier) {
