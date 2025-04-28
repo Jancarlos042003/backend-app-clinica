@@ -1,10 +1,12 @@
 package com.proyecto.appclinica.controller;
 
-import com.proyecto.appclinica.service.AuthService;
-import com.proyecto.appclinica.service.CodeVerificationService;
-import com.proyecto.appclinica.model.dto.ApiResponse;
 import com.proyecto.appclinica.model.dto.LoginRequest;
 import com.proyecto.appclinica.model.dto.VerifyCodeRequest;
+import com.proyecto.appclinica.model.dto.auth.AuthResponseDto;
+import com.proyecto.appclinica.model.dto.auth.CodeSubmissionResponseDto;
+import com.proyecto.appclinica.model.dto.auth.ResponseUserExistsDto;
+import com.proyecto.appclinica.service.AuthService;
+import com.proyecto.appclinica.service.CodeVerificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,22 +23,18 @@ public class AuthController {
     private final CodeVerificationService codeService;
 
     @PostMapping("/check-user")
-    public ResponseEntity<ApiResponse<Boolean>> checkUserExists(@Valid @RequestBody LoginRequest request) {
-        boolean exists = authService.userExists(request.getIdentifier());
-        return ResponseEntity.ok(new ApiResponse<>(exists,
-                exists ? "Usuario encontrado" : "Usuario no encontrado"));
+    public ResponseEntity<ResponseUserExistsDto> checkUserExists(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.checkUserExists(request.getIdentifier()));
     }
 
     @PostMapping("/send-code")
-    public ResponseEntity<ApiResponse<Void>> sendVerificationCode(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<CodeSubmissionResponseDto> sendVerificationCode(@Valid @RequestBody LoginRequest request) {
         codeService.generateAndSendCode(request.getIdentifier());
-        return ResponseEntity.ok(new ApiResponse<>(true, "Código enviado correctamente"));
+        return ResponseEntity.ok(new CodeSubmissionResponseDto(true, "El código ha sido enviado correctamente"));
     }
 
     @PostMapping("/verify-code")
-    public ResponseEntity<ApiResponse<String>> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
-        String token = authService.verifyCodeAndGetToken(request.getIdentifier(), request.getCode());
-        return ResponseEntity.ok(new ApiResponse<>(token, "Código verificado correctamente"));
+    public ResponseEntity<AuthResponseDto> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
+        return ResponseEntity.ok(authService.verifyCodeAndGetToken(request.getIdentifier(), request.getCode()));
     }
-
 }

@@ -1,25 +1,24 @@
 package com.proyecto.appclinica.service;
 
-import com.proyecto.appclinica.exception.ApiException;
+import com.proyecto.appclinica.exception.ResourceNotFoundException;
 import com.proyecto.appclinica.model.dto.UserProfileResponse;
-import com.proyecto.appclinica.repository.FhirRepository;
+import com.proyecto.appclinica.repository.FhirPatientRepository;
 import lombok.RequiredArgsConstructor;
 import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Patient;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final FhirRepository fhirRepository;
+    private final FhirPatientRepository fhirPatientRepository;
 
     public UserProfileResponse getUserProfile(String identifier) {
-        Patient patient = fhirRepository.getPatientByIdentifier(identifier);
+        Patient patient = fhirPatientRepository.getPatientByIdentifier(identifier);
 
         if (patient == null) {
-            throw new ApiException("Usuario no encontrado", HttpStatus.NOT_FOUND);
+            throw new ResourceNotFoundException("Usuario", "DNI", identifier);
         }
 
         // Extraer información del paciente

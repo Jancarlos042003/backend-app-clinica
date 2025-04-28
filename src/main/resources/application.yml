@@ -45,7 +45,7 @@ logging:
 # Configuracion del servidor FHIR
 fhir:
   server:
-    url: ${FHIR_SERVER_URL:http://localhost:8080/fhir}
+    url: ${FHIR_SERVER_URL}
     token:
 
 # Configuracion JWT

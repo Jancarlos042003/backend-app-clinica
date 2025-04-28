@@ -1,11 +1,11 @@
 package com.proyecto.appclinica.service;
 
-import com.proyecto.appclinica.exception.ApiException;
-import com.proyecto.appclinica.repository.FhirRepository;
+import com.proyecto.appclinica.exception.ManyRequestsException;
+import com.proyecto.appclinica.exception.ResourceNotFoundException;
+import com.proyecto.appclinica.repository.FhirPatientRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 @Slf4j
 public class CodeVerificationService {
-    private final FhirRepository fhirRepository;
+    private final FhirPatientRepository fhirPatientRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
     private static final int CODE_LENGTH = 6;
@@ -27,25 +27,22 @@ public class CodeVerificationService {
     private static final int MAX_VERIFICATION_ATTEMPTS = 3;
     private static final long COOLDOWN_PERIOD_MS = 15 * 60 * 1000L; // 15 minutos de bloqueo
 
-    /**
-     * Genera y envía un código de verificación al usuario identificado
-     * @param identifier Identificador único del usuario (ej: número de documento)
-     * @throws ApiException si el usuario no existe o está en período de enfriamiento
-     */
     public void generateAndSendCode(String identifier) {
         // Verificar que el usuario existe
-        if (!fhirRepository.patientExistsByIdentifier(identifier)) {
+        if (!fhirPatientRepository.patientExistsByIdentifier(identifier)) {
             log.warn("Intento de generación de código para usuario inexistente: {}", identifier);
-            throw new ApiException("Usuario no encontrado", HttpStatus.NOT_FOUND);
+
+            throw new ResourceNotFoundException("Usuario", "DNI", identifier);
         }
 
         // Verificar si el usuario está en período de enfriamiento
         String cooldownKey = REDIS_COOLDOWN_PREFIX + identifier;
         if (Boolean.TRUE.equals(redisTemplate.hasKey(cooldownKey))) {
             Long ttl = redisTemplate.getExpire(cooldownKey, TimeUnit.SECONDS);
+
             log.warn("Usuario {} en período de enfriamiento. Tiempo restante: {} segundos", identifier, ttl);
-            throw new ApiException("Demasiados intentos fallidos. Por favor, intente nuevamente más tarde",
-                    HttpStatus.TOO_MANY_REQUESTS);
+
+            throw new ManyRequestsException("Demasiados intentos fallidos. Por favor, intente nuevamente más tarde");
         }
 
         // Generar código
@@ -63,13 +60,6 @@ public class CodeVerificationService {
         log.info("Código de verificación generado para usuario: {}", identifier);
     }
 
-    /**
-     * Verifica si el código proporcionado es válido para el usuario
-     * @param identifier Identificador único del usuario
-     * @param inputCode Código ingresado para verificar
-     * @return true si el código es válido, false de lo contrario
-     * @throws ApiException si el usuario ha excedido el número máximo de intentos
-     */
     public boolean verifyCode(String identifier, String inputCode) {
         // Verificar si el usuario está en período de enfriamiento
         String cooldownKey = REDIS_COOLDOWN_PREFIX + identifier;
@@ -77,8 +67,8 @@ public class CodeVerificationService {
             Long ttl = redisTemplate.getExpire(cooldownKey, TimeUnit.SECONDS);
             log.warn("Usuario {} en período de enfriamiento durante verificación. Tiempo restante: {} segundos",
                     identifier, ttl);
-            throw new ApiException("Demasiados intentos fallidos. Por favor, intente nuevamente más tarde",
-                    HttpStatus.TOO_MANY_REQUESTS);
+
+            throw new ManyRequestsException("Demasiados intentos fallidos. Por favor, intente nuevamente más tarde");
         }
 
         String redisKey = REDIS_CODE_PREFIX + identifier;
@@ -86,6 +76,7 @@ public class CodeVerificationService {
 
         if (storedCode == null) {
             log.info("Intento de verificación con código expirado o inexistente para usuario: {}", identifier);
+
             return false; // Código expirado o nunca existió
         }
 
@@ -120,8 +111,8 @@ public class CodeVerificationService {
                 log.warn("Usuario {} bloqueado por {} minutos debido a múltiples intentos fallidos",
                         identifier, COOLDOWN_PERIOD_MS / (60 * 1000));
 
-                throw new ApiException("Número máximo de intentos excedido. Por favor, solicite un nuevo código después " +
-                        "del período de enfriamiento", HttpStatus.TOO_MANY_REQUESTS);
+                throw new ManyRequestsException("Número máximo de intentos excedido. Por favor, " +
+                        "solicite un nuevo código después del período de enfriamiento");
             }
         }
 
