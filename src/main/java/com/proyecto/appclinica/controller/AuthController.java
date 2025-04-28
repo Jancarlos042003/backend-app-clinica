@@ -1,7 +1,7 @@
 package com.proyecto.appclinica.controller;
 
 import com.proyecto.appclinica.model.dto.LoginRequest;
-import com.proyecto.appclinica.model.dto.VerifyCodeRequest;
+import com.proyecto.appclinica.model.dto.auth.VerifyCodeRequest;
 import com.proyecto.appclinica.model.dto.auth.AuthResponseDto;
 import com.proyecto.appclinica.model.dto.auth.CodeSubmissionResponseDto;
 import com.proyecto.appclinica.model.dto.auth.ResponseUserExistsDto;
@@ -29,8 +29,7 @@ public class AuthController {
 
     @PostMapping("/send-code")
     public ResponseEntity<CodeSubmissionResponseDto> sendVerificationCode(@Valid @RequestBody LoginRequest request) {
-        codeService.generateAndSendCode(request.getIdentifier());
-        return ResponseEntity.ok(new CodeSubmissionResponseDto(true, "El código ha sido enviado correctamente"));
+        return ResponseEntity.ok(codeService.generateAndSendCode(request.getIdentifier()));
     }
 
     @PostMapping("/verify-code")
