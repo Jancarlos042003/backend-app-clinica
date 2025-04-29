@@ -2,11 +2,15 @@ package com.proyecto.appclinica.service;
 
 import com.proyecto.appclinica.exception.ManyRequestsException;
 import com.proyecto.appclinica.exception.ResourceNotFoundException;
+import com.proyecto.appclinica.model.dto.auth.CodeSubmissionResponseDto;
 import com.proyecto.appclinica.repository.FhirPatientRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hl7.fhir.r4.model.ContactPoint;
+import org.hl7.fhir.r4.model.Patient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -18,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 public class CodeVerificationService {
     private final FhirPatientRepository fhirPatientRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final SmsService smsService;
+    private final EmailService emailService;
 
     private static final int CODE_LENGTH = 6;
     private static final long CODE_VALIDITY_MS = 5 * 60 * 1000L; // 5 minutos
@@ -27,119 +33,176 @@ public class CodeVerificationService {
     private static final int MAX_VERIFICATION_ATTEMPTS = 3;
     private static final long COOLDOWN_PERIOD_MS = 15 * 60 * 1000L; // 15 minutos de bloqueo
 
-    public void generateAndSendCode(String identifier) {
-        // Verificar que el usuario existe
-        if (!fhirPatientRepository.patientExistsByIdentifier(identifier)) {
-            log.warn("Intento de generación de código para usuario inexistente: {}", identifier);
+    public CodeSubmissionResponseDto generateAndSendCode(String identifier) {
+        // Verifico existencia y cool-down
+        Patient patient = findPatientOrThrow(identifier);
+        checkCooldownOrThrow(identifier);
 
-            throw new ResourceNotFoundException("Usuario", "DNI", identifier);
-        }
+        // Obtengo datos
+        String phoneNumber = getPhoneNumber(patient);
+        String email = getEmail(patient);
+        String fullName = extractFullName(patient);
 
-        // Verificar si el usuario está en período de enfriamiento
-        String cooldownKey = REDIS_COOLDOWN_PREFIX + identifier;
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(cooldownKey))) {
-            Long ttl = redisTemplate.getExpire(cooldownKey, TimeUnit.SECONDS);
-
-            log.warn("Usuario {} en período de enfriamiento. Tiempo restante: {} segundos", identifier, ttl);
-
-            throw new ManyRequestsException("Demasiados intentos fallidos. Por favor, intente nuevamente más tarde");
-        }
-
-        // Generar código
+        // Genero y guardo código
         String code = generateRandomCode();
+        saveCodeInRedis(identifier, code);
 
-        // Guardar el código en Redis con TTL de 5 minutos
-        String redisKey = REDIS_CODE_PREFIX + identifier;
-        redisTemplate.opsForValue().set(redisKey, code, CODE_VALIDITY_MS, TimeUnit.MILLISECONDS);
+        // Envío según disponibilidad
+        boolean hasPhone = StringUtils.hasText(phoneNumber);
+        boolean hasEmail = StringUtils.hasText(email);
 
-        // Reiniciar contador de intentos
-        redisTemplate.delete(REDIS_ATTEMPTS_PREFIX + identifier);
+        if (!hasPhone && !hasEmail) {
+            log.warn("El paciente {} no tiene número de teléfono ni email registrado", identifier);
+            throw new ResourceNotFoundException("Número de teléfono y Email");
+        }
+        if (hasPhone) {
+            sendVerificationSms(phoneNumber, fullName, code);
+            log.info("Enviando código por SMS al paciente {}", identifier);
+        }
+        if (hasEmail) {
+            sendVerificationEmail(email, fullName, code);
+            log.info("Enviando código por email al paciente {}", identifier);
+        }
 
-        // Enviar código al usuario
-        sendCodeToUser(identifier, code);
-        log.info("Código de verificación generado para usuario: {}", identifier);
+        return new CodeSubmissionResponseDto(
+                "El código ha sido enviado correctamente",
+                hasPhone ? phoneNumber : null,
+                hasEmail ? email : null
+        );
     }
 
     public boolean verifyCode(String identifier, String inputCode) {
-        // Verificar si el usuario está en período de enfriamiento
-        String cooldownKey = REDIS_COOLDOWN_PREFIX + identifier;
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(cooldownKey))) {
-            Long ttl = redisTemplate.getExpire(cooldownKey, TimeUnit.SECONDS);
-            log.warn("Usuario {} en período de enfriamiento durante verificación. Tiempo restante: {} segundos",
-                    identifier, ttl);
+        // Cool-down
+        checkCooldownOrThrow(identifier);
 
-            throw new ManyRequestsException("Demasiados intentos fallidos. Por favor, intente nuevamente más tarde");
+        // btener código almacenado
+        String stored = redisTemplate.opsForValue().get(codeKey(identifier));
+        if (!StringUtils.hasText(stored)) {
+            log.info("Código expirado o inexistente para usuario: {}", identifier);
+            return false;
         }
 
-        String redisKey = REDIS_CODE_PREFIX + identifier;
-        String storedCode = redisTemplate.opsForValue().get(redisKey);
-
-        if (storedCode == null) {
-            log.info("Intento de verificación con código expirado o inexistente para usuario: {}", identifier);
-
-            return false; // Código expirado o nunca existió
-        }
-
-        boolean isValid = storedCode.equals(inputCode);
-
-        if (isValid) {
-            // Invalidar el código después de un uso exitoso
-            redisTemplate.delete(redisKey);
-            // Reiniciar contador de intentos
-            redisTemplate.delete(REDIS_ATTEMPTS_PREFIX + identifier);
-            log.info("Verificación de código exitosa para usuario: {}", identifier);
+        // Comparar
+        boolean valid = stored.equals(inputCode);
+        if (valid) {
+            onSuccessfulVerification(identifier);
         } else {
-            // Incrementar contador de intentos fallidos
-            String attemptsKey = REDIS_ATTEMPTS_PREFIX + identifier;
-            Long attempts = redisTemplate.opsForValue().increment(attemptsKey);
-
-            // Establecer TTL al contador si es el primer intento
-            if (attempts == 1) {
-                redisTemplate.expire(attemptsKey, CODE_VALIDITY_MS, TimeUnit.MILLISECONDS);
-            }
-
-            log.warn("Intento fallido de verificación para usuario: {}. Intento {} de {}",
-                    identifier, attempts, MAX_VERIFICATION_ATTEMPTS);
-
-            // Si se alcanza el límite de intentos, activar período de enfriamiento
-            if (attempts >= MAX_VERIFICATION_ATTEMPTS) {
-                redisTemplate.opsForValue().set(cooldownKey, Instant.now().toString(),
-                        COOLDOWN_PERIOD_MS, TimeUnit.MILLISECONDS);
-                redisTemplate.delete(redisKey); // Invalidar el código actual
-                redisTemplate.delete(attemptsKey); // Reiniciar contador
-
-                log.warn("Usuario {} bloqueado por {} minutos debido a múltiples intentos fallidos",
-                        identifier, COOLDOWN_PERIOD_MS / (60 * 1000));
-
-                throw new ManyRequestsException("Número máximo de intentos excedido. Por favor, " +
-                        "solicite un nuevo código después del período de enfriamiento");
-            }
+            onFailedVerification(identifier);
         }
-
-        return isValid;
+        return valid;
     }
 
-    /**
-     * Genera un código numérico aleatorio seguro
-     * @return Código de verificación
-     */
+
+    private Patient findPatientOrThrow(String id) {
+        if (!fhirPatientRepository.patientExistsByIdentifier(id)) {
+            log.warn("Usuario inexistente: {}", id);
+            throw new ResourceNotFoundException("Usuario", "DNI", id);
+        }
+        return fhirPatientRepository.getPatientByIdentifier(id);
+    }
+
+    private void checkCooldownOrThrow(String id) {
+        String key = REDIS_COOLDOWN_PREFIX + id;
+
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+            long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+            log.warn("Usuario {} en período de enfriamiento. TTL: {}s", id, ttl);
+
+            throw new ManyRequestsException("Demasiados intentos fallidos. Intente más tarde");
+        }
+    }
+
     private String generateRandomCode() {
         SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder(CODE_LENGTH);
+
         for (int i = 0; i < CODE_LENGTH; i++) {
             sb.append(random.nextInt(10)); // Dígitos 0-9
         }
         return sb.toString();
     }
 
-    /**
-     * Envía el código al usuario mediante el canal apropiado
-     * @param identifier Identificador del usuario
-     * @param code Código generado
-     */
-    private void sendCodeToUser(String identifier, String code) {
-        // Implementar envío por SMS, email, etc.
-        // Aquí solo simulamos el envío con un log
-        log.info("SIMULACIÓN: Código para {}: {}", identifier, code);
+    private void saveCodeInRedis(String id, String code) {
+        String key = REDIS_CODE_PREFIX + id;
+        // 5 minutos de validez
+        redisTemplate.opsForValue().set(key, code, 5, TimeUnit.MINUTES);
+        // reset de intentos
+        redisTemplate.delete(REDIS_ATTEMPTS_PREFIX + id);
+    }
+
+    private String extractFullName(Patient patient) {
+        if (patient.getName().isEmpty()) {
+            return "Paciente";
+        }
+        return patient.getNameFirstRep().getNameAsSingleString();
+    }
+
+    private String getPhoneNumber(Patient patient) {
+        return patient.getTelecom().stream()
+                .filter(t -> t.getSystem().name().equals("PHONE"))
+                .findFirst()
+                .map(t -> {
+                    String phone = t.getValue();
+                    // Asegurar que el número esté en formato E.164 (con +)
+                    if (!phone.startsWith("+")) {
+                        phone = "+" + phone.replaceAll("[^0-9]", "");
+                    }
+                    return phone;
+                })
+                .orElse(null);
+    }
+
+    private String getEmail(Patient patient) {
+        return patient.getTelecom().stream()
+                .filter(t -> t.getSystem().name().equals("EMAIL"))
+                .findFirst()
+                .map(ContactPoint::getValue)
+                .orElse(null);
+    }
+
+    private void sendVerificationSms(String phoneNumber, String fullName, String verificationCode) {
+        String msg = "PostCare: Hola, " + fullName.toUpperCase() + " tu código de verificación es: " + verificationCode;
+        smsService.sendSms(phoneNumber, msg);
+    }
+
+    private void sendVerificationEmail(String to, String fullName, String verificationCode) {
+        String body = "PostCare: Hola, " + fullName.toUpperCase() + " tu código de verificación es: " + verificationCode;
+        emailService.sendEmail(to, "Código de verificación", body);
+    }
+
+    // Métodos para obtener las claves de Redis
+    private String codeKey(String id)       { return REDIS_CODE_PREFIX + id; }
+    private String attemptsKey(String id)   { return REDIS_ATTEMPTS_PREFIX + id; }
+    private String cooldownKey(String id)   { return REDIS_COOLDOWN_PREFIX + id; }
+
+    private void onSuccessfulVerification(String identifier) {
+        redisTemplate.delete(codeKey(identifier));
+        redisTemplate.delete(attemptsKey(identifier));
+        log.info("Verificación de código exitosa para usuario: {}", identifier);
+    }
+
+    private void onFailedVerification(String identifier) {
+        String aKey = attemptsKey(identifier);
+        long attempts = redisTemplate.opsForValue().increment(aKey);
+
+        if (attempts == 1) {
+            redisTemplate.expire(aKey, CODE_VALIDITY_MS, TimeUnit.MILLISECONDS);
+        }
+        log.warn("Intento fallido {} de {} para usuario {}",
+                attempts, MAX_VERIFICATION_ATTEMPTS, identifier);
+
+        if (attempts >= MAX_VERIFICATION_ATTEMPTS) {
+            // Bloquear
+            redisTemplate.opsForValue()
+                    .set(cooldownKey(identifier), Instant.now().toString(),
+                            COOLDOWN_PERIOD_MS, TimeUnit.MILLISECONDS);
+            redisTemplate.delete(codeKey(identifier));
+            redisTemplate.delete(aKey);
+            log.warn("Usuario {} bloqueado por {} min",
+                    identifier, COOLDOWN_PERIOD_MS / 60000);
+
+            throw new ManyRequestsException(
+                    "Límite de intentos excedido. Solicite un nuevo código después del enfriamiento");
+        }
     }
 }
