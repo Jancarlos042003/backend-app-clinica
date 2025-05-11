@@ -1,6 +1,6 @@
 package com.proyecto.appclinica.controller;
 
-import com.proyecto.appclinica.model.dto.LoginRequest;
+import com.proyecto.appclinica.model.dto.IdentifierRequest;
 import com.proyecto.appclinica.model.dto.auth.VerifyCodeRequest;
 import com.proyecto.appclinica.model.dto.auth.AuthResponseDto;
 import com.proyecto.appclinica.model.dto.auth.CodeSubmissionResponseDto;
@@ -23,12 +23,12 @@ public class AuthController {
     private final CodeVerificationService codeService;
 
     @PostMapping("/check-user")
-    public ResponseEntity<ResponseUserExistsDto> checkUserExists(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ResponseUserExistsDto> checkUserExists(@Valid @RequestBody IdentifierRequest request) {
         return ResponseEntity.ok(authService.checkUserExists(request.getIdentifier()));
     }
 
     @PostMapping("/send-code")
-    public ResponseEntity<CodeSubmissionResponseDto> sendVerificationCode(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<CodeSubmissionResponseDto> sendVerificationCode(@Valid @RequestBody IdentifierRequest request) {
         return ResponseEntity.ok(codeService.generateAndSendCode(request.getIdentifier()));
     }
 
