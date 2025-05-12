@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "DNI", identifier));
 
         List<SimpleGrantedAuthority> authorities = patient.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_".concat(String.valueOf(role.getName()))))
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
                 .toList();
 
         return User.builder()
