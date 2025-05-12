@@ -1,39 +1,35 @@
 package com.proyecto.appclinica.controller;
 
 import com.proyecto.appclinica.model.dto.IdentifierRequest;
-import com.proyecto.appclinica.model.dto.auth.VerifyCodeRequest;
-import com.proyecto.appclinica.model.dto.auth.AuthResponseDto;
-import com.proyecto.appclinica.model.dto.auth.CodeSubmissionResponseDto;
-import com.proyecto.appclinica.model.dto.auth.ResponseUserExistsDto;
-import com.proyecto.appclinica.service.AuthService;
+import com.proyecto.appclinica.model.dto.auth.*;
+import com.proyecto.appclinica.service.impl.AuthServiceImpl;
 import com.proyecto.appclinica.service.CodeVerificationService;
+import com.proyecto.appclinica.service.impl.LoginServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class AuthController {
-    private final AuthService authService;
+    private final AuthServiceImpl authService;
+    private final LoginServiceImpl loginService;
     private final CodeVerificationService codeService;
 
-    @PostMapping("/check-user")
-    public ResponseEntity<ResponseUserExistsDto> checkUserExists(@Valid @RequestBody IdentifierRequest request) {
+    @GetMapping("/check-user")
+    public ResponseEntity<CodeSubmissionResponseDto> checkUserExists(@Valid @RequestBody IdentifierRequest request) {
         return ResponseEntity.ok(authService.checkUserExists(request.getIdentifier()));
     }
 
-    @PostMapping("/send-code")
-    public ResponseEntity<CodeSubmissionResponseDto> sendVerificationCode(@Valid @RequestBody IdentifierRequest request) {
-        return ResponseEntity.ok(codeService.generateAndSendCode(request.getIdentifier()));
+    @PostMapping("/verify-code")
+    public ResponseEntity<VerifyCodeResponse> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
+        return ResponseEntity.ok(authService.verifyCode(request.getIdentifier(), request.getCode()));
     }
 
-    @PostMapping("/verify-code")
-    public ResponseEntity<AuthResponseDto> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
-        return ResponseEntity.ok(authService.verifyCodeAndGetToken(request.getIdentifier(), request.getCode()));
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
+        return ResponseEntity.ok(loginService.login(request));
     }
 }
