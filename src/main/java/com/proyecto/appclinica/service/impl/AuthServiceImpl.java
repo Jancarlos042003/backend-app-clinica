@@ -1,7 +1,7 @@
 package com.proyecto.appclinica.service.impl;
 
 import com.proyecto.appclinica.exception.ResourceNotFoundException;
-import com.proyecto.appclinica.model.dto.auth.ResponseUserExistsDto;
+import com.proyecto.appclinica.model.dto.auth.CodeSubmissionResponseDto;
 import com.proyecto.appclinica.model.dto.auth.VerifyCodeResponse;
 import com.proyecto.appclinica.repository.FhirPatientRepository;
 import com.proyecto.appclinica.service.AuthService;
@@ -17,14 +17,15 @@ public class AuthServiceImpl implements AuthService {
     private final CodeVerificationService codeService;
 
     @Override
-    public ResponseUserExistsDto checkUserExists(String identifier) {
+    public CodeSubmissionResponseDto checkUserExists(String identifier) {
         boolean exists = userExists(identifier);
 
         if (!exists) {
             throw new ResourceNotFoundException("Usuario", "DNI", identifier);
         }
 
-        return new ResponseUserExistsDto(true, "Usuario encontrado");
+        // Si el usuario existe, se envía el código de verificación
+        return codeService.generateAndSendCode(identifier);
     }
 
     @Override
