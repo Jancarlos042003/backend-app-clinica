@@ -1,8 +1,12 @@
 package com.proyecto.appclinica.config;
 
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -11,7 +15,11 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.util.Objects;
+
+@Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class RedisConfig {
     @Value("${spring.data.redis.host}")
     private String redisHost;
@@ -21,6 +29,8 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.password}")
     private String redisPassword;
+
+    private final RedisConnectionFactory redisConnectionFactory;
 
 
     /**
@@ -63,5 +73,24 @@ public class RedisConfig {
         template.afterPropertiesSet();
 
         return template;
+    }
+
+    // Prueba la conexión a Redis al iniciar la aplicación.
+    @PostConstruct
+    public void testRedisConnection() {
+        RedisConnection connection = null;
+        try {
+            log.info("Intentando conectar a Redis en {}:{}", redisHost, redisPort);
+            connection = redisConnectionFactory.getConnection();
+            String pong = Objects.requireNonNull(connection.ping());
+            log.info("Conexión a Redis establecida exitosamente. Respuesta: {}", pong);
+        } catch (Exception e) {
+            log.error("Error al conectar a Redis: {}", e.getMessage(), e);
+            log.warn("La aplicación continuará ejecutándose, pero las funcionalidades de Redis no estarán disponibles");
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
     }
 }

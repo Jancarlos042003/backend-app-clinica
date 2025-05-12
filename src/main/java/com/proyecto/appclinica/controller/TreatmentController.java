@@ -12,6 +12,7 @@ import org.hl7.fhir.r4.model.MedicationRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class TreatmentController {
     private final TreatmentService treatmentService;
     private final FhirContext fhirContext;
 
+    @PreAuthorize("hasRole('PATIENT')")
     @PostMapping
     public ResponseEntity<String> createTreatment(@Valid @RequestBody CreateTreatmentDto treatmentDTO) {
         MedicationRequest request = treatmentService.createTreatment(treatmentDTO);
@@ -35,6 +37,7 @@ public class TreatmentController {
                 .body(responseJson);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/{id}/update")
     public ResponseEntity<String> updateTreatment(@PathVariable("id") String medicationRequestId,
                                                   @Valid @RequestBody UpdateTreatmentDto treatmentDTO) {
@@ -47,6 +50,7 @@ public class TreatmentController {
                 .body(responseJson);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/{id}/cancel")
     public ResponseEntity<String> cancelTreatment(@PathVariable("id") String medicationRequestId) {
         MedicationRequest request = treatmentService.cancelTreatment(medicationRequestId);
@@ -58,6 +62,7 @@ public class TreatmentController {
                 .body(responseJson);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/{id}/complete")
     public ResponseEntity<String> completeTreatment(@PathVariable("id") String medicationRequestId) {
         MedicationRequest request = treatmentService.completeTreatment(medicationRequestId);
@@ -69,6 +74,7 @@ public class TreatmentController {
                 .body(responseJson);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/patient/{patientId}/all")
     public ResponseEntity<List<Object>> getAllMedicationRequestsByPatientId(@PathVariable("patientId") String patientId) {
         List<MedicationRequest> medicationRequests = treatmentService.getAllMedicationRequestsByPatientId(patientId);
@@ -80,6 +86,7 @@ public class TreatmentController {
                 .body(responseObjects);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/patient/{patientId}/all/{status}")
     public ResponseEntity<List<Object>> getAllMedicationRequestsByPatientIdAndStatus(
             @PathVariable("patientId") String patientId,

@@ -1,7 +1,6 @@
 package com.proyecto.appclinica.model.dto.auth;
 
-public record ResponseUserExistsDto(
-        boolean exists,
+public record VerifyCodeResponse(
         String message
 ) {
 }

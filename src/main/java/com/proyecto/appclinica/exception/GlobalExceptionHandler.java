@@ -47,6 +47,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        return createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+    }
+
     private ResponseEntity<ErrorResponse> createErrorResponse(HttpStatus status, String message, String path) {
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())

@@ -1,20 +1,17 @@
 package com.proyecto.appclinica.model.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Entity
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class PatientEntity {
@@ -28,5 +25,12 @@ public class PatientEntity {
     private String phone;
     private String email;
     private String password;
-    private String accountStatus;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "patient_roles",
+            joinColumns = @JoinColumn(name = "patient_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<RoleEntity> roles = new HashSet<>();
 }
