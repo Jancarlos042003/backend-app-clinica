@@ -11,6 +11,7 @@ import com.proyecto.appclinica.service.CredentialsService;
 import lombok.RequiredArgsConstructor;
 import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.Patient;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -24,6 +25,7 @@ public class CredentialsServiceImpl implements CredentialsService {
     private final FhirPatientRepository fhirPatientRepository;
     private final PatientRepository patientRepository;
     private final RoleServiceImpl roleService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void createCredentials(CredentialsRequestDto credentialsRequestDto) {
@@ -43,7 +45,7 @@ public class CredentialsServiceImpl implements CredentialsService {
         roles.add(role);
 
         Patient patient = fhirPatientRepository.getPatientByIdentifier(credentialsRequestDto.getIdentifier());
-        PatientEntity newPatient = convertPatientToEntity(patient, credentialsRequestDto.getPassword(), roles);
+        PatientEntity newPatient = convertPatientToEntity(patient, passwordEncoder.encode(credentialsRequestDto.getPassword()), roles);
         patientRepository.save(newPatient);
     }
 
