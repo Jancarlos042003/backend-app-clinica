@@ -5,6 +5,7 @@ import com.proyecto.appclinica.model.dto.auth.AuthResponseDto;
 import com.proyecto.appclinica.model.dto.auth.LoginRequestDto;
 import com.proyecto.appclinica.service.LoginService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LoginServiceImpl implements LoginService {
@@ -36,7 +38,7 @@ public class LoginServiceImpl implements LoginService {
             // Usuario envía credenciales
             Authentication authRequest = new UsernamePasswordAuthenticationToken(username, password);
 
-            // Se pasa al AuthenticationManger para la autenticación
+            // Se pasa al AuthenticationManager para la autenticación
             Authentication authentication = authenticationManager.authenticate(authRequest);
 
             // Se almacena en el SecurityContext
@@ -50,7 +52,7 @@ public class LoginServiceImpl implements LoginService {
                     .map(GrantedAuthority::getAuthority)
                     .toList());
 
-            // Crear el tokens
+            // Crear los tokens
             String accessToken = jwtUtils.createTokenFromUsernameWithCustomClaims(userDetails.getUsername(), claims);
             String refreshToken = jwtUtils.createRefreshToken(userDetails.getUsername());
 
@@ -63,10 +65,13 @@ public class LoginServiceImpl implements LoginService {
                     .build();
 
         } catch (BadCredentialsException e) {
+            log.error("Credenciales inválidas para el usuario: {}", requestDto.getIdentifier());
             throw new BadCredentialsException("Credenciales inválidas");
         } catch (UsernameNotFoundException e) {
+            log.error("Usuario no encontrado: {}", requestDto.getIdentifier());
             throw new UsernameNotFoundException("Usuario no encontrado");
         } catch (AuthenticationException e) {
+            log.error("Error al autenticar el usuario: {}", e.getMessage());
             throw new AuthenticationException("Error al autenticar el usuario") {};
         }
     }
