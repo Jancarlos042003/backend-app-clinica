@@ -19,7 +19,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ResponseUserExistsDto checkUserExists(String identifier) {
         boolean exists = userExists(identifier);
-        return new ResponseUserExistsDto(exists, exists ? "Usuario encontrado" : "Usuario no encontrado");
+
+        if (!exists) {
+            throw new ResourceNotFoundException("Usuario", "DNI", identifier);
+        }
+
+        return new ResponseUserExistsDto(true, "Usuario encontrado");
     }
 
     @Override
