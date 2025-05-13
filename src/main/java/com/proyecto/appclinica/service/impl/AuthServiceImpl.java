@@ -49,6 +49,15 @@ public class AuthServiceImpl implements AuthService {
         return new VerifyCodeResponse("El código es correcto");
     }
 
+    @Override
+    public CodeSubmissionResponseDto resendCode(String identifier) {
+        if (!userExists(identifier)) {
+            throw new ResourceNotFoundException("Usuario", "DNI", identifier);
+        }
+
+        return codeService.resendVerificationCode(identifier);
+    }
+
     private boolean userExists(String identifier) {
         return fhirPatientRepository.patientExistsByIdentifier(identifier);
     }

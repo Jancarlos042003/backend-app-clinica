@@ -6,4 +6,5 @@ import com.proyecto.appclinica.model.dto.auth.VerifyCodeResponse;
 public interface AuthService {
     CodeSubmissionResponseDto checkUserExists(String identifier);
     VerifyCodeResponse verifyCode(String identifier, String code);
+    CodeSubmissionResponseDto resendCode(String identifier);
 }

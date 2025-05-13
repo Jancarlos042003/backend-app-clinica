@@ -27,6 +27,11 @@ public class AuthController {
         return ResponseEntity.ok(authService.verifyCode(request.getIdentifier(), request.getCode()));
     }
 
+    @PostMapping("/resend-code")
+    public ResponseEntity<CodeSubmissionResponseDto> resendCode(@RequestParam String identifier) {
+        return ResponseEntity.ok(authService.resendCode(identifier));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
         return ResponseEntity.ok(loginService.login(request));
