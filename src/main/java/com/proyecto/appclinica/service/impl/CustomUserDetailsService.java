@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
         PatientEntity patient = patientRepository.findByDni(identifier)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "DNI", identifier));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         List<SimpleGrantedAuthority> authorities = patient.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
