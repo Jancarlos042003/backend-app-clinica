@@ -6,9 +6,9 @@ spring:
     name: backend-app-clinica
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?serverTimezone=UTC&sslmode=require
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5430}/${DB_NAME:app_clinica}?serverTimezone=UTC&sslmode=prefer
+    username: ${DB_USER:jan}
+    password: ${DB_PASSWORD:123456}
 
   jpa:
     hibernate:
@@ -21,9 +21,9 @@ spring:
 
   data:
     redis:
-      port: ${REDIS_PORT}
-      host: ${REDIS_HOST}
-      password: ${REDIS_PASSWORD}
+      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST:localhost}
+      password: ${REDIS_PASSWORD:}
       timeout: 5000 # Configuracion de tiempos (milisegundos) de conexion
       client-type: lettuce  # Opcional: especificar si usas lettuce o jedis
       lettuce:
@@ -37,10 +37,10 @@ spring:
         enabled: true
 
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:25}
+    username: ${MAIL_USERNAME:usuario}
+    password: ${MAIL_PASSWORD:password}
     properties:
         mail:
           smtp:
@@ -59,16 +59,16 @@ logging:
 # Configuracion del servidor FHIR
 fhir:
   server:
-    url: ${FHIR_SERVER_URL}
+    url: ${FHIR_SERVER_URL:http://localhost:8080/fhir}
     token:
 
 # Configuracion JWT
 jwt:
-  secret-key: ${JWT_SECRET_KEY}
-  expiration-time: ${JWT_EXPIRATION_TIME}
-  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION_TIME} # 7 days
+  secret-key: ${JWT_SECRET_KEY:secret}
+  expiration-time: ${JWT_EXPIRATION_TIME:3600000}
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION_TIME:604800000} # 7 days
 
 twilio:
-  account-sid: ${TWILIO_ACCOUNT_SID}
-  auth-token: ${TWILIO_AUTH_TOKEN}
-  phone-from: ${TWILIO_PHONE_NUMBER}
+  account-sid: ${TWILIO_ACCOUNT_SID:}
+  auth-token: ${TWILIO_AUTH_TOKEN:}
+  phone-from: ${TWILIO_PHONE_NUMBER:}
