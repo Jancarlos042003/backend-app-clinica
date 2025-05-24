@@ -36,6 +36,8 @@ public class CodeVerificationService {
     public CodeSubmissionResponseDto generateAndSendCode(String identifier) {
         // Verifico existencia y cool-down
         Patient patient = findPatientOrThrow(identifier);
+
+        // Verifico si está en período de enfriamiento
         checkCooldownOrThrow(identifier);
 
         // Obtengo datos
@@ -75,7 +77,7 @@ public class CodeVerificationService {
         // Cool-down
         checkCooldownOrThrow(identifier);
 
-        // btener código almacenado
+        // Obtener código almacenado
         String stored = redisTemplate.opsForValue().get(codeKey(identifier));
         if (!StringUtils.hasText(stored)) {
             log.info("Código expirado o inexistente para usuario: {}", identifier);
@@ -92,6 +94,23 @@ public class CodeVerificationService {
         return valid;
     }
 
+    public CodeSubmissionResponseDto resendVerificationCode(String identifier) {
+        checkCooldownOrThrow(identifier);
+
+        // Verificar si ya existe un código activo y si lo hay, eliminarlo
+        String existingCode = redisTemplate.opsForValue().get(codeKey(identifier));
+        if (StringUtils.hasText(existingCode)) {
+            // Eliminamos el código anterior para generar uno nuevo
+            redisTemplate.delete(codeKey(identifier));
+            log.info("Eliminando código anterior para usuario: {}", identifier);
+        }
+
+        // Restablecer contador de intentos
+        redisTemplate.delete(attemptsKey(identifier));
+
+        // Generar y enviar un nuevo código
+        return generateAndSendCode(identifier);
+    }
 
     private Patient findPatientOrThrow(String id) {
         if (!fhirPatientRepository.patientExistsByIdentifier(id)) {
@@ -101,6 +120,7 @@ public class CodeVerificationService {
         return fhirPatientRepository.getPatientByIdentifier(id);
     }
 
+    // Verificar si está en período de enfriamiento
     private void checkCooldownOrThrow(String id) {
         String key = REDIS_COOLDOWN_PREFIX + id;
 
@@ -202,7 +222,7 @@ public class CodeVerificationService {
                     identifier, COOLDOWN_PERIOD_MS / 60000);
 
             throw new ManyRequestsException(
-                    "Límite de intentos excedido. Solicite un nuevo código después del enfriamiento");
+                    "Límite de intentos excedido. Inténtelo más tarde");
         }
     }
 }

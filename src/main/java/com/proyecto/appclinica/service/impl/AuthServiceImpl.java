@@ -4,6 +4,7 @@ import com.proyecto.appclinica.exception.ResourceNotFoundException;
 import com.proyecto.appclinica.model.dto.auth.CodeSubmissionResponseDto;
 import com.proyecto.appclinica.model.dto.auth.VerifyCodeResponse;
 import com.proyecto.appclinica.repository.FhirPatientRepository;
+import com.proyecto.appclinica.repository.PatientRepository;
 import com.proyecto.appclinica.service.AuthService;
 import com.proyecto.appclinica.service.CodeVerificationService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final FhirPatientRepository fhirPatientRepository;
     private final CodeVerificationService codeService;
+    private final PatientRepository patientRepository;
 
     @Override
     public CodeSubmissionResponseDto checkUserExists(String identifier) {
@@ -22,6 +24,10 @@ public class AuthServiceImpl implements AuthService {
 
         if (!exists) {
             throw new ResourceNotFoundException("Usuario", "DNI", identifier);
+        }
+
+        if (patientRepository.findByDni(identifier).isPresent()){
+            throw new IllegalArgumentException("El usuario ya existe. Inicia sesión.");
         }
 
         // Si el usuario existe, se envía el código de verificación
@@ -41,6 +47,15 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return new VerifyCodeResponse("El código es correcto");
+    }
+
+    @Override
+    public CodeSubmissionResponseDto resendCode(String identifier) {
+        if (!userExists(identifier)) {
+            throw new ResourceNotFoundException("Usuario", "DNI", identifier);
+        }
+
+        return codeService.resendVerificationCode(identifier);
     }
 
     private boolean userExists(String identifier) {
