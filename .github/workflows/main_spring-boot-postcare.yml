@@ -55,6 +55,34 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_8C0DA6CF58714043931F9CF567B555A5 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_61F08FFCC81D475AACB30D66BFD54866 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D9935867029C40CFA9EBB1944BD395B4 }}
+          
+      - name: Set Azure App Settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: 'spring-boot-postcare'
+          slot-name: 'Production'
+          settings-json: |
+            {
+              "DB_HOST": "${{ secrets.DB_HOST }}",
+              "DB_PORT": "${{ secrets.DB_PORT }}",
+              "DB_NAME": "${{ secrets.DB_NAME }}",
+              "DB_USER": "${{ secrets.DB_USER }}",
+              "DB_PASSWORD": "${{ secrets.DB_PASSWORD }}",
+              "FHIR_SERVER_URL": "${{ secrets.FHIR_SERVER_URL }}",
+              "REDIS_PORT": "${{ secrets.REDIS_PORT }}",
+              "REDIS_HOST": "${{ secrets.REDIS_HOST }}",
+              "REDIS_PASSWORD": "${{ secrets.REDIS_PASSWORD }}",
+              "JWT_SECRET_KEY": "${{ secrets.JWT_SECRET_KEY }}",
+              "JWT_EXPIRATION_TIME": "${{ secrets.JWT_EXPIRATION_TIME }}",
+              "JWT_REFRESH_EXPIRATION_TIME": "${{ secrets.JWT_REFRESH_EXPIRATION_TIME }}",
+              "TWILIO_ACCOUNT_SID": "${{ secrets.TWILIO_ACCOUNT_SID }}",
+              "TWILIO_AUTH_TOKEN": "${{ secrets.TWILIO_AUTH_TOKEN }}",
+              "TWILIO_PHONE_NUMBER": "${{ secrets.TWILIO_PHONE_NUMBER }}",
+              "MAIL_HOST": "${{ secrets.MAIL_HOST }}",
+              "MAIL_PORT": "${{ secrets.MAIL_PORT }}",
+              "MAIL_USERNAME": "${{ secrets.MAIL_USERNAME }}",
+              "MAIL_PASSWORD": "${{ secrets.MAIL_PASSWORD }}"
+            }
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
