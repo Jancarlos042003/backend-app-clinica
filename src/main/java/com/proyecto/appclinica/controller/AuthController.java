@@ -3,8 +3,8 @@ package com.proyecto.appclinica.controller;
 import com.proyecto.appclinica.model.dto.PatientProfileResponse;
 import com.proyecto.appclinica.model.dto.auth.*;
 import com.proyecto.appclinica.service.impl.AuthServiceImpl;
-import com.proyecto.appclinica.service.CodeVerificationService;
 import com.proyecto.appclinica.service.impl.LoginServiceImpl;
+import com.proyecto.appclinica.service.impl.RefreshTokenServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final AuthServiceImpl authService;
     private final LoginServiceImpl loginService;
-    private final CodeVerificationService codeService;
+    private final RefreshTokenServiceImpl refreshTokenService;
 
     @GetMapping("/check-user")
     public ResponseEntity<CodeSubmissionResponseDto> checkUserExists(@RequestParam String identifier) {
@@ -37,6 +37,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
         return ResponseEntity.ok(loginService.login(request));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<AuthResponseDto> refreshToken(@Valid @RequestBody RefreshTokenRequestDto request) {
+        return ResponseEntity.ok(refreshTokenService.refreshToken(request));
     }
 
     @PreAuthorize("hasRole('PATIENT') or hasRole('DOCTOR') or hasRole('ADMIN')")

@@ -66,6 +66,8 @@ public class CodeVerificationService {
             log.info("Enviando código por email al paciente {}", identifier);
         }
 
+        log.info("El codigo es: {}", code);
+
         return new CodeSubmissionResponseDto(
                 "El código ha sido enviado correctamente",
                 hasPhone ? phoneNumber : null,
