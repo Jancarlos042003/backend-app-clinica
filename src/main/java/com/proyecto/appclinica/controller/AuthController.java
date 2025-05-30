@@ -1,5 +1,6 @@
 package com.proyecto.appclinica.controller;
 
+import com.proyecto.appclinica.model.dto.PatientProfileResponse;
 import com.proyecto.appclinica.model.dto.auth.*;
 import com.proyecto.appclinica.service.impl.AuthServiceImpl;
 import com.proyecto.appclinica.service.CodeVerificationService;
@@ -7,6 +8,7 @@ import com.proyecto.appclinica.service.impl.LoginServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,5 +37,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
         return ResponseEntity.ok(loginService.login(request));
+    }
+
+    @PreAuthorize("hasRole('PATIENT') or hasRole('DOCTOR') or hasRole('ADMIN')")
+    @GetMapping("/user")
+    public ResponseEntity<PatientProfileResponse> getAuthenticatedUser() {
+        return ResponseEntity.ok(authService.getAuthenticatedUser());
     }
 }
