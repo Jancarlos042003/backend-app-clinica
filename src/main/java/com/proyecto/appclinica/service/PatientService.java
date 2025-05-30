@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class PatientService {
     private final FhirPatientRepository fhirPatientRepository;
 
     public UserProfileResponse getUserProfile(String identifier) {
