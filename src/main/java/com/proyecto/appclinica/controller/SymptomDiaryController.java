@@ -1,6 +1,7 @@
 package com.proyecto.appclinica.controller;
 
-import com.proyecto.appclinica.model.dto.symptom.SymptomDiaryEntryDto;
+import com.proyecto.appclinica.model.dto.symptom.SymptomDto;
+import com.proyecto.appclinica.model.dto.symptom.SymptomRecordDto;
 import com.proyecto.appclinica.service.SymptomDiaryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,40 +22,46 @@ public class SymptomDiaryController {
 
     @PreAuthorize("hasRole('PATIENT')")
     @PostMapping
-    public ResponseEntity<String> createEntry(@Valid @RequestBody SymptomDiaryEntryDto dto) {
+    public ResponseEntity<SymptomRecordDto> createEntry(@Valid @RequestBody SymptomDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(symptomDiaryService.createDiaryEntry(dto));
     }
 
     @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateEntry(
+    public ResponseEntity<SymptomRecordDto> updateEntry(
             @PathVariable String id,
-            @Valid @RequestBody SymptomDiaryEntryDto dto) {
+            @Valid @RequestBody SymptomDto dto) {
         return ResponseEntity.ok(symptomDiaryService.updateDiaryEntry(id, dto));
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<SymptomDiaryEntryDto>> getAllPatientDiaries(
-            @PathVariable String patientId) {
-        List<SymptomDiaryEntryDto> entries = symptomDiaryService.getAllPatientSymptomDiaries(patientId);
+    @GetMapping("/patient/{identifier}")
+    public ResponseEntity<List<SymptomRecordDto>> getAllPatientDiaries(
+            @PathVariable String identifier) {
+        List<SymptomRecordDto> entries = symptomDiaryService.getAllPatientSymptomDiaries(identifier);
         return ResponseEntity.ok(entries);
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/patient/{patientId}/date-range")
-    public ResponseEntity<List<SymptomDiaryEntryDto>> getPatientDiariesByDateRange(
-            @PathVariable String patientId,
+    @GetMapping("/patient/{identifier}/date-range")
+    public ResponseEntity<List<SymptomRecordDto>> getPatientDiariesByDateRange(
+            @PathVariable String identifier,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        List<SymptomDiaryEntryDto> entries = symptomDiaryService.getPatientSymptomDiariesByDateRange(
-                patientId, startDate, endDate);
-        return ResponseEntity.ok(entries);
+        return ResponseEntity.ok(symptomDiaryService.getPatientSymptomDiariesByDateRange(identifier, startDate, endDate));
+    }
+
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/patient/{identifier}/todays-symptoms")
+    public ResponseEntity<List<SymptomRecordDto>> getTodaySymptomsByPatient(
+            @PathVariable String identifier) {
+        List<SymptomRecordDto> todaySymptoms = symptomDiaryService.getTodaySymptomsByPatient(identifier);
+        return ResponseEntity.ok(todaySymptoms);
     }
 
     @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/{observationId}")
-    public ResponseEntity<SymptomDiaryEntryDto> getDiaryById(
+    public ResponseEntity<SymptomRecordDto> getDiaryById(
             @PathVariable String observationId) {
         return ResponseEntity.ok(symptomDiaryService.getSymptomDiaryById(observationId));
     }

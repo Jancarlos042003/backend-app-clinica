@@ -1,32 +1,28 @@
 package com.proyecto.appclinica.model.dto.symptom;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SymptomDto {
-    @NotBlank
-    private String code;
+    @NotBlank(message = "El síntoma es obligatorio")
+    private String symptom;  // Síntoma obligatorio
 
-    @NotBlank
-    private String description;
+    @NotNull(message = "La intensidad es obligatoria")
+    private String intensity;  // Intensidad obligatoria
 
-    @NotNull
-    @Min(1) @Max(10)
-    private Integer severity;
+    private String date; // Fecha de inicio
 
-    @NotBlank
-    private String bodySite;
+    private Integer duration;  // Duración en minutos/horas
 
-    @NotNull
-    private LocalTime onsetTime;
+    @Size(max = 1000)
+    private String notes;  // Notas adicionales
+
+    private String identifier;  // ID del paciente al que pertenece el síntoma
 }
