@@ -68,6 +68,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(FhirMedicationStatementException.class)
+    public ResponseEntity<ErrorResponse> handleFhirMedicationStatementException(FhirMedicationStatementException ex, WebRequest request) {
+        return createErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+    }
+
     // Todas indican que la AUTENTICACIÓN ha fallado
     @ExceptionHandler({
             BadCredentialsException.class, // Cuando usuario o contraseña son incorrectos
