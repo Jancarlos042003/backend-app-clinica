@@ -1,125 +1,60 @@
 package com.proyecto.appclinica.controller;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.appclinica.model.dto.treatment.CreateTreatmentDto;
-import com.proyecto.appclinica.model.dto.treatment.UpdateTreatmentDto;
+import com.proyecto.appclinica.model.dto.treatment.TreatmentRecordDto;
+import com.proyecto.appclinica.model.dto.treatment.TreatmentResultDto;
 import com.proyecto.appclinica.service.TreatmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.hl7.fhir.r4.model.MedicationRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/treatments")
 @RequiredArgsConstructor
 public class TreatmentController {
     private final TreatmentService treatmentService;
-    private final FhirContext fhirContext;
 
     @PreAuthorize("hasRole('PATIENT')")
     @PostMapping
-    public ResponseEntity<String> createTreatment(@Valid @RequestBody CreateTreatmentDto treatmentDTO) {
-        MedicationRequest request = treatmentService.createTreatment(treatmentDTO);
-
-        String responseJson = convertMedicationRequestToFormattedJson(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .contentType(MediaType.APPLICATION_JSON) // Establece el tipo de contenido como JSON
-                .body(responseJson);
+    public ResponseEntity<TreatmentRecordDto> createTreatment(@Valid @RequestBody CreateTreatmentDto treatmentDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(treatmentService.createTreatment(treatmentDTO));
     }
 
     @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/{id}/update")
-    public ResponseEntity<String> updateTreatment(@PathVariable("id") String medicationRequestId,
-                                                  @Valid @RequestBody UpdateTreatmentDto treatmentDTO) {
-        MedicationRequest request = treatmentService.updateTreatment(medicationRequestId, treatmentDTO);
-
-        String responseJson = convertMedicationRequestToFormattedJson(request);
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(responseJson);
+    public ResponseEntity<TreatmentRecordDto> updateTreatment(@PathVariable("id") String medicationRequestId,
+                                                              @Valid @RequestBody CreateTreatmentDto treatmentDTO) {
+        return ResponseEntity.ok(treatmentService.updateTreatment(medicationRequestId, treatmentDTO));
     }
 
     @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<String> cancelTreatment(@PathVariable("id") String medicationRequestId) {
-        MedicationRequest request = treatmentService.cancelTreatment(medicationRequestId);
-
-        String responseJson = convertMedicationRequestToFormattedJson(request);
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(responseJson);
+    public ResponseEntity<TreatmentResultDto> cancelTreatment(@PathVariable("id") String medicationRequestId) {
+        return ResponseEntity.ok(treatmentService.cancelTreatment(medicationRequestId));
     }
 
     @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/{id}/complete")
-    public ResponseEntity<String> completeTreatment(@PathVariable("id") String medicationRequestId) {
-        MedicationRequest request = treatmentService.completeTreatment(medicationRequestId);
-
-        String responseJson = convertMedicationRequestToFormattedJson(request);
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(responseJson);
+    public ResponseEntity<TreatmentResultDto> completeTreatment(@PathVariable("id") String medicationRequestId) {
+        return ResponseEntity.ok(treatmentService.completeTreatment(medicationRequestId));
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/patient/{patientId}/all")
-    public ResponseEntity<List<Object>> getAllMedicationRequestsByPatientId(@PathVariable("patientId") String patientId) {
-        List<MedicationRequest> medicationRequests = treatmentService.getAllMedicationRequestsByPatientId(patientId);
-
-        List<Object> responseObjects = convertMedicationRequestsToJson(medicationRequests);
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(responseObjects);
+    @GetMapping("/patient/{identifier}/all")
+    public ResponseEntity<List<TreatmentRecordDto>> getAllMedicationRequestsByPatientId(@PathVariable String identifier) {
+        return ResponseEntity.ok(treatmentService.getAllMedicationRequestsByPatientId(identifier));
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/patient/{patientId}/all/{status}")
-    public ResponseEntity<List<Object>> getAllMedicationRequestsByPatientIdAndStatus(
-            @PathVariable("patientId") String patientId,
-            @PathVariable("status") String status) {
-        List<MedicationRequest> medicationRequests = treatmentService.getAllMedicationRequestsByPatientIdAndStatus(patientId, status);
-
-        List<Object> responseObjects = convertMedicationRequestsToJson(medicationRequests);
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(responseObjects);
-    }
-
-    // Uso de fhirContext para convertir a JSON estándar FHIR
-    private String convertMedicationRequestToFormattedJson(MedicationRequest request) {
-        return treatmentService.getFhirContext().newJsonParser().setPrettyPrint(true)
-                .encodeResourceToString(request);
-    }
-
-    private List<Object> convertMedicationRequestsToJson(List<MedicationRequest> medicationRequests) {
-        IParser jsonParser = fhirContext.newJsonParser();
-
-        return medicationRequests.stream()
-                .map(req -> {
-                    // Convertir a JSON string
-                    String json = jsonParser.encodeResourceToString(req);
-                    // Convertir a objeto JSON
-                    try {
-                        return new ObjectMapper().readValue(json, Object.class);
-                    } catch (Exception e) {
-                        return Map.of("error", "Error parsing resource");
-                    }
-                })
-                .toList();
+    @GetMapping("/patient/{identifier}/all/{status}")
+    public ResponseEntity<List<TreatmentRecordDto>> getAllMedicationRequestsByPatientIdAndStatus(
+            @PathVariable String identifier,
+            @PathVariable String status) {
+        return ResponseEntity.ok(treatmentService.getAllMedicationRequestsByPatientIdAndStatus(identifier, status));
     }
 }
