@@ -14,16 +14,32 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "patients")
 public class PatientEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private String lastname;
+
+    @Column(unique = true)
     private String dni;
+
+    @Column(name = "birth_date")
     private Date birthDate;
+
     private String phone;
+
+    @Column(unique = true)
     private String email;
+
+    private String gender;
+
+    @Column(nullable = false)
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
