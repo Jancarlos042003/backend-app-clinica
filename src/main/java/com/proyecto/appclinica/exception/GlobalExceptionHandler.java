@@ -77,6 +77,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(PasswordMismatchException.class)
+    public ResponseEntity<ErrorResponse> handlePasswordMismatchException(PasswordMismatchException ex, WebRequest request) {
+        return createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+    }
+
     // Todas indican que la AUTENTICACIÓN ha fallado
     @ExceptionHandler({
             BadCredentialsException.class, // Cuando usuario o contraseña son incorrectos
@@ -100,6 +109,15 @@ public class GlobalExceptionHandler {
         return createErrorResponse(
                 HttpStatus.UNAUTHORIZED,
                 message,
+                request.getDescription(false)
+        );
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRequestException(InvalidRequestException ex, WebRequest request) {
+        return createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
                 request.getDescription(false)
         );
     }
