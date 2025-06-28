@@ -5,11 +5,10 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.proyecto.appclinica.exception.FhirClientException;
 import com.proyecto.appclinica.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.IdType;
-import org.hl7.fhir.r4.model.MedicationRequest;
+import org.hl7.fhir.r4.model.*;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -24,16 +23,19 @@ public class FhirMedicationRequestRepository {
                 .execute();
 
         // Devuelve el recurso con ID asignado por el servidor
+        MedicationRequest savedRequest;
         if (outcome.getResource() != null) {
-            return (MedicationRequest) outcome.getResource();
+            savedRequest = (MedicationRequest) outcome.getResource();
         } else {
             // Si el servidor no devuelve el recurso completo, obtenemos el ID y lo recuperamos
             IdType id = (IdType) outcome.getId();
-            return fhirClient.read()
+            savedRequest = fhirClient.read()
                     .resource(MedicationRequest.class)
                     .withId(id)
                     .execute();
         }
+
+        return savedRequest;
     }
 
     public MedicationRequest getMedicationRequestById(String medicationRequestId) {
@@ -52,15 +54,21 @@ public class FhirMedicationRequestRepository {
                 .resource(medicationRequest)
                 .execute();
 
-        return (MedicationRequest) outcome.getResource();
+        MedicationRequest updatedRequest = (MedicationRequest) outcome.getResource();
+        if (updatedRequest == null) {
+            // Si el servidor no devuelve el recurso completo, lo recuperamos
+            updatedRequest = getMedicationRequestById(medicationRequest.getIdElement().getIdPart());
+        }
+
+        return updatedRequest;
     }
 
-    public List<MedicationRequest> findByPatientId(String patientId) {
+    public List<MedicationRequest> findMedicationRequestsByPatientId(String patientId) {
         Bundle bundle = searchFhirBundle(patientId, null);
         return extractMedicationRequestsFromBundle(bundle);
     }
 
-    public List<MedicationRequest> findByPatientIdAndStatus(String patientId, String status) {
+    public List<MedicationRequest> findMedicationRequestsByPatientIdAndStatus(String patientId, String status) {
         Bundle bundle = searchFhirBundle(patientId, status);
         return extractMedicationRequestsFromBundle(bundle);
     }
@@ -84,6 +92,10 @@ public class FhirMedicationRequestRepository {
     }
 
     private List<MedicationRequest> extractMedicationRequestsFromBundle(Bundle bundle) {
+        if (bundle == null || bundle.getEntry() == null) {
+            return new ArrayList<>();
+        }
+
         return bundle.getEntry().stream()
                 .filter(entry -> entry.getResource() instanceof MedicationRequest)
                 .map(entry -> (MedicationRequest) entry.getResource())
