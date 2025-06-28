@@ -4,6 +4,7 @@ import com.proyecto.appclinica.exception.InvalidRequestException;
 import com.proyecto.appclinica.exception.PasswordMismatchException;
 import com.proyecto.appclinica.exception.ResourceNotFoundException;
 import com.proyecto.appclinica.model.dto.auth.CredentialsRequestDto;
+import com.proyecto.appclinica.model.entity.EPatientRecordStatus;
 import com.proyecto.appclinica.model.entity.PatientEntity;
 import com.proyecto.appclinica.repository.PatientRepository;
 import com.proyecto.appclinica.service.CredentialsService;
@@ -47,6 +48,7 @@ public class CredentialsServiceImpl implements CredentialsService {
 
         // Asignamos la contraseña al paciente
         patient.setPassword(passwordEncoder.encode(password));
+        patient.setStatus(EPatientRecordStatus.COMPLETE); // Actualizamos el estado del paciente a COMPLETO
 
         patientRepository.save(patient);
     }

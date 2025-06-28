@@ -1,6 +1,7 @@
 package com.proyecto.appclinica.controller;
 
 import com.proyecto.appclinica.model.dto.PatientProfileResponse;
+import com.proyecto.appclinica.model.dto.VerificationStatusResponseDto;
 import com.proyecto.appclinica.model.dto.auth.*;
 import com.proyecto.appclinica.service.impl.AuthServiceImpl;
 import com.proyecto.appclinica.service.impl.LoginServiceImpl;
@@ -20,7 +21,7 @@ public class AuthController {
     private final RefreshTokenServiceImpl refreshTokenService;
 
     @GetMapping("/check-user")
-    public ResponseEntity<CodeSubmissionResponseDto> checkUserExists(@RequestParam String identifier) {
+    public ResponseEntity<VerificationStatusResponseDto> checkUserExists(@RequestParam String identifier) {
         return ResponseEntity.ok(authService.checkUserExists(identifier));
     }
 

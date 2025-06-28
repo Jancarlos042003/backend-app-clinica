@@ -1,5 +1,6 @@
 package com.proyecto.appclinica.event.patient;
 
+import com.proyecto.appclinica.model.entity.EPatientRecordStatus;
 import com.proyecto.appclinica.model.entity.ERole;
 import com.proyecto.appclinica.model.entity.PatientEntity;
 import com.proyecto.appclinica.model.entity.RoleEntity;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -56,9 +58,10 @@ public class PatientCreatedEventListener {
                         .findFirst()
                         .map(ContactPoint::getValue)
                         .orElse(null))
-                .password(null)
+                .password(UUID.randomUUID().toString()) // Generar una contraseña aleatoria temporal
                 .gender(patient.getGender().name()) // MALE, FEMALE, OTHER, UNKNOWN
                 .roles(roles)
+                .status(EPatientRecordStatus.VERIFIED)
                 .build();
     }
 

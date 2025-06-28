@@ -49,4 +49,7 @@ public class PatientEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<RoleEntity> roles = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    private EPatientRecordStatus status;
 }
