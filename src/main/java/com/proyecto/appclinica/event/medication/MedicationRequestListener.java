@@ -10,18 +10,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.r4.model.*;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.YearMonth;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -34,7 +27,6 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Component
-@EnableAsync
 @RequiredArgsConstructor
 public class MedicationRequestListener {
 
@@ -149,8 +141,8 @@ public class MedicationRequestListener {
                 .findFirst();
 
         return irregularExt.isPresent() &&
-               irregularExt.get().getValue() instanceof BooleanType &&
-               ((org.hl7.fhir.r4.model.BooleanType) irregularExt.get().getValue()).booleanValue();
+                irregularExt.get().getValue() instanceof BooleanType &&
+                ((org.hl7.fhir.r4.model.BooleanType) irregularExt.get().getValue()).booleanValue();
     }
 
     private String getSchedulePattern(MedicationRequest request) {
