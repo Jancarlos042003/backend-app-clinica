@@ -116,7 +116,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRequestException(InvalidRequestException ex, WebRequest request) {
         return createErrorResponse(
-                HttpStatus.BAD_REQUEST,
+                HttpStatus.CONFLICT,
                 ex.getMessage(),
                 request.getDescription(false)
         );
