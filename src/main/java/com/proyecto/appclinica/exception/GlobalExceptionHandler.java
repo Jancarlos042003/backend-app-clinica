@@ -59,6 +59,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(StatusException.class)
+    public ResponseEntity<ErrorResponse> handleStatusException(StatusException ex, WebRequest request) {
+        return createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+    }
+
     // Todas indican que la AUTENTICACIÓN ha fallado
     @ExceptionHandler({
             BadCredentialsException.class, // Cuando usuario o contraseña son incorrectos
