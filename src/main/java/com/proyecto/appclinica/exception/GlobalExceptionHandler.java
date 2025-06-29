@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -41,6 +42,23 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * Maneja excepciones de validación de argumentos en los controladores.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, WebRequest request) {
+        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .reduce((msg1, msg2) -> msg1 + ", " + msg2)
+                .orElse("Invalid input");
+
+        return createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                errorMessage,
+                request.getDescription(false)
+        );
+    }
+
     @ExceptionHandler(FhirClientException.class)
     public ResponseEntity<ErrorResponse> handleFhirClientException(FhirClientException ex, WebRequest request) {
         return createErrorResponse(
@@ -52,6 +70,33 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        return createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+    }
+
+    @ExceptionHandler(StatusException.class)
+    public ResponseEntity<ErrorResponse> handleStatusException(StatusException ex, WebRequest request) {
+        return createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+    }
+
+    @ExceptionHandler(FhirMedicationStatementException.class)
+    public ResponseEntity<ErrorResponse> handleFhirMedicationStatementException(FhirMedicationStatementException ex, WebRequest request) {
+        return createErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+    }
+
+    @ExceptionHandler(PasswordMismatchException.class)
+    public ResponseEntity<ErrorResponse> handlePasswordMismatchException(PasswordMismatchException ex, WebRequest request) {
         return createErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
@@ -82,6 +127,15 @@ public class GlobalExceptionHandler {
         return createErrorResponse(
                 HttpStatus.UNAUTHORIZED,
                 message,
+                request.getDescription(false)
+        );
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRequestException(InvalidRequestException ex, WebRequest request) {
+        return createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
                 request.getDescription(false)
         );
     }

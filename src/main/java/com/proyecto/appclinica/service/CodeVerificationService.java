@@ -34,6 +34,8 @@ public class CodeVerificationService {
     private static final long COOLDOWN_PERIOD_MS = 15 * 60 * 1000L; // 15 minutos de bloqueo
 
     public CodeSubmissionResponseDto generateAndSendCode(String identifier) {
+        log.info("Generando y enviando código de verificación para el paciente: {}", identifier);
+
         // Verifico existencia y cool-down
         Patient patient = findPatientOrThrow(identifier);
 
@@ -49,6 +51,8 @@ public class CodeVerificationService {
         String code = generateRandomCode();
         saveCodeInRedis(identifier, code);
 
+        log.info("Código generado para el paciente {}: {}", identifier, code);
+
         // Envío según disponibilidad
         boolean hasPhone = StringUtils.hasText(phoneNumber);
         boolean hasEmail = StringUtils.hasText(email);
@@ -57,10 +61,11 @@ public class CodeVerificationService {
             log.warn("El paciente {} no tiene número de teléfono ni email registrado", identifier);
             throw new ResourceNotFoundException("Número de teléfono y Email");
         }
-        if (hasPhone) {
-            sendVerificationSms(phoneNumber, fullName, code);
-            log.info("Enviando código por SMS al paciente {}", identifier);
-        }
+        // Descomentar cuando se tenga credenciales de Twilio para SMS
+//        if (hasPhone) {
+//            sendVerificationSms(phoneNumber, fullName, code);
+//            log.info("Enviando código por SMS al paciente {}", identifier);
+//        }
         if (hasEmail) {
             sendVerificationEmail(email, fullName, code);
             log.info("Enviando código por email al paciente {}", identifier);
@@ -183,12 +188,12 @@ public class CodeVerificationService {
     }
 
     private void sendVerificationSms(String phoneNumber, String fullName, String verificationCode) {
-        String msg = "PostCare: Hola, " + fullName.toUpperCase() + " tu código de verificación es: " + verificationCode;
+        String msg = "Medi+: Hola, " + fullName.toUpperCase() + " tu código de verificación es: " + verificationCode;
         smsService.sendSms(phoneNumber, msg);
     }
 
     private void sendVerificationEmail(String to, String fullName, String verificationCode) {
-        String body = "PostCare: Hola, " + fullName.toUpperCase() + " tu código de verificación es: " + verificationCode;
+        String body = "Medi+: Hola, " + fullName.toUpperCase() + " tu código de verificación es: " + verificationCode;
         emailService.sendEmail(to, "Código de verificación", body);
     }
 
