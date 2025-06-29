@@ -57,7 +57,6 @@ public class RefreshTokenServiceImpl {
             updateRefreshToken(userDetails.getUsername(), refreshToken, newRefreshToken);
 
             return AuthResponseDto.builder()
-                    //.username(userDetails.getUsername())
                     .message("Token refreshed successfully")
                     .token(newAccessToken)
                     .refreshToken(newRefreshToken)
