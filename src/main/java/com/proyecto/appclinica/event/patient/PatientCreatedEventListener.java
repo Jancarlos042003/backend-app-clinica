@@ -1,5 +1,6 @@
 package com.proyecto.appclinica.event.patient;
 
+import com.proyecto.appclinica.event.user.UserSettingsCreationEvent;
 import com.proyecto.appclinica.model.entity.EPatientRecordStatus;
 import com.proyecto.appclinica.model.entity.ERole;
 import com.proyecto.appclinica.model.entity.PatientEntity;
@@ -7,8 +8,10 @@ import com.proyecto.appclinica.model.entity.RoleEntity;
 import com.proyecto.appclinica.repository.PatientRepository;
 import com.proyecto.appclinica.service.RoleService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.Patient;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +21,11 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class PatientCreatedEventListener {
     private final PatientRepository patientRepository;
     private final RoleService roleService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @EventListener
     public PatientEntity createPatient(PatientCreatedEvent event) {
@@ -35,7 +40,13 @@ public class PatientCreatedEventListener {
                 roles
         );
 
-        return patientRepository.save(patientEntity);
+        PatientEntity savedPatient = patientRepository.save(patientEntity);
+
+        // Publicar evento para crear las configuraciones de usuario de manera asíncrona
+        log.info("Publicando evento para crear configuraciones de usuario para paciente ID: {}", savedPatient.getId());
+        eventPublisher.publishEvent(new UserSettingsCreationEvent(savedPatient.getId()));
+
+        return savedPatient;
     }
 
     private PatientEntity convertPatientToEntity(Patient patient, Set<RoleEntity> roles) {
