@@ -28,30 +28,63 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public Flux<String> chat(ChatRequest chatRequest) {
         String sessionId = chatRequest.getSessionId();
+        String userMessage = chatRequest.getMessage();
 
-        if (chatRequest.getMessage().trim().isEmpty()) {
-            return Flux.error(new IllegalArgumentException("El mensaje no pueden estar vacíos."));
+        // Validar la petición
+        if (!isValidRequest(userMessage)) {
+            return Flux.error(new IllegalArgumentException("El mensaje no puede estar vacío."));
         }
 
-        // Guardar el mensaje del usuario en la base de datos
-        saveMessage("usuario", chatRequest.getMessage(), sessionId);
+        try {
+            // Construir la lista de mensajes del historial
+            List<Message> messages = buildHistory(sessionId);
 
-        List<Message> messages = buildHistory(sessionId);
+            // Guardar el mensaje del usuario en la base de datos
+            saveUserInput(sessionId, userMessage);
 
-        StringBuilder messageCompletion = new StringBuilder();
+            // Procesar la solicitud de texto
+            return processRequest(sessionId, userMessage, messages);
+        } catch (Exception e) {
+            log.error("Error inesperado en el procesamiento del mensaje: {}", e.getMessage());
+            return Flux.error(new RuntimeException("Error en el procesamiento: " + e.getMessage()));
+        }
+    }
 
-        // Acumular la respuesta del asistente
+    /**
+     * Valida que la solicitud tenga al menos un texto.
+     */
+    private boolean isValidRequest(String userMessage) {
+        boolean hasText = userMessage != null && !userMessage.trim().isEmpty();
+        return hasText;
+    }
+
+    /**
+     * Guarda la entrada del usuario en la base de datos.
+     */
+    private void saveUserInput(String sessionId, String userMessage) {
+        boolean hasText = userMessage != null && !userMessage.trim().isEmpty();
+
+        if (hasText) {
+            saveMessage("usuario", userMessage, sessionId);
+        }
+    }
+
+    /**
+     * Procesa la solicitud de texto.
+     */
+    private Flux<String> processRequest(String sessionId, String userMessage, List<Message> messages) {
         return chatClient.prompt()
                 .messages(messages)
-                .system("Eres un asistente médico virtual. Responde a las preguntas de los pacientes de manera profesional y empática.")
-                .user(chatRequest.getMessage())
+                .user(userMessage)
                 .stream()
                 .content()
-                .doOnNext(messageCompletion::append) // Acumular el contenido de la respuesta
-                .doOnComplete(() -> saveMessage("asistente", messageCompletion.toString(), sessionId)) // Guardar el mensaje del asistente en la base de datos
+                .doOnNext(response -> saveMessage("asistente", response, sessionId))
                 .doOnError(error -> log.error("Error al procesar el mensaje: {}", error.getMessage()));
     }
 
+    /**
+     * Guarda un mensaje en la base de datos.
+     */
     private void saveMessage(String rol, String message, String sessionId) {
         messageRepository.save(MessageEntity.builder()
                 .rol(rol)
@@ -61,12 +94,18 @@ public class ChatServiceImpl implements ChatService {
                 .build());
     }
 
+    /**
+     * Construye el historial de mensajes para una sesión dada.
+     */
     private List<Message> buildHistory(String sessionId) {
         return messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId).stream()
                 .map(this::convertAMessage)
                 .toList();
     }
 
+    /**
+     * Convierte una entidad de mensaje a un objeto Message para el modelo AI.
+     */
     private Message convertAMessage(MessageEntity messageEntity) {
         return switch (messageEntity.getRol()) {
             case "usuario" -> new UserMessage(messageEntity.getContent());
