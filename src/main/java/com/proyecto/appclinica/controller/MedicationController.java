@@ -6,6 +6,7 @@ import com.proyecto.appclinica.service.MedicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -18,12 +19,14 @@ public class MedicationController {
 
     private final MedicationService medicationService;
 
+    @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/today/{identifier}")
     public ResponseEntity<List<MedicationResponseDto>> getMedicationsForToday(@PathVariable String identifier) {
         List<MedicationResponseDto> medications = medicationService.getMedicationsForToday(identifier);
         return ResponseEntity.ok(medications);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/{identifier}")
     public ResponseEntity<List<MedicationResponseDto>> getMedicationsForDate(
             @PathVariable String identifier,
@@ -32,6 +35,7 @@ public class MedicationController {
         return ResponseEntity.ok(medications);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/status")
     public ResponseEntity<MedicationResponseDto> updateMedicationStatus(
             @RequestBody MedicationStatusUpdateDto updateDto) {
@@ -39,6 +43,7 @@ public class MedicationController {
         return ResponseEntity.ok(updatedMedication);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/range/{identifier}")
     public ResponseEntity<List<MedicationResponseDto>> getMedicationsInDateRange(
             @PathVariable String identifier,
@@ -48,6 +53,7 @@ public class MedicationController {
         return ResponseEntity.ok(medications);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/range/{identifier}/status")
     public ResponseEntity<List<MedicationResponseDto>> getMedicationsByDateRangeAndStatus(
             @PathVariable String identifier,
