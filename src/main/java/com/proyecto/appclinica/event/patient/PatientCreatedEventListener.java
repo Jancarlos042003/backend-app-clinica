@@ -50,11 +50,15 @@ public class PatientCreatedEventListener {
     }
 
     private PatientEntity convertPatientToEntity(Patient patient, Set<RoleEntity> roles) {
+        // Obtener el Patient ID
+        String patientId = patient.getIdElement().getIdPart();
+
         // Obtener todos los nombres del paciente y unirlos en un solo String
         StringBuilder nameBuilder = new StringBuilder();
         patient.getNameFirstRep().getGiven().forEach(given -> nameBuilder.append(given).append(" "));
 
         return PatientEntity.builder()
+                .patientId(patientId)
                 .name(nameBuilder.toString().trim())
                 .lastname(patient.getNameFirstRep().getFamily())
                 .dni(patient.getIdentifierFirstRep().getValue())
