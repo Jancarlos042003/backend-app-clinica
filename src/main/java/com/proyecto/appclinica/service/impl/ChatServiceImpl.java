@@ -32,7 +32,8 @@ public class ChatServiceImpl implements ChatService {
 
         // Validar la petición
         if (!isValidRequest(userMessage)) {
-            return Flux.error(new IllegalArgumentException("El mensaje no puede estar vacío."));
+            log.warn("Mensaje inválido recibido: {}", userMessage);
+            return Flux.just("data: Error: El mensaje no puede estar vacío\n\n");
         }
 
         try {
@@ -45,8 +46,8 @@ public class ChatServiceImpl implements ChatService {
             // Procesar la solicitud de texto
             return processRequest(sessionId, userMessage, messages);
         } catch (Exception e) {
-            log.error("Error inesperado en el procesamiento del mensaje: {}", e.getMessage());
-            return Flux.error(new RuntimeException("Error en el procesamiento: " + e.getMessage()));
+            log.error("Error inesperado en el procesamiento del mensaje: {}", e.getMessage(), e);
+            return Flux.just("data: Error en el procesamiento: " + e.getMessage() + "\n\n");
         }
     }
 
@@ -54,23 +55,20 @@ public class ChatServiceImpl implements ChatService {
      * Valida que la solicitud tenga al menos un texto.
      */
     private boolean isValidRequest(String userMessage) {
-        boolean hasText = userMessage != null && !userMessage.trim().isEmpty();
-        return hasText;
+        return userMessage != null && !userMessage.trim().isEmpty();
     }
 
     /**
      * Guarda la entrada del usuario en la base de datos.
      */
     private void saveUserInput(String sessionId, String userMessage) {
-        boolean hasText = userMessage != null && !userMessage.trim().isEmpty();
-
-        if (hasText) {
+        if (userMessage != null && !userMessage.trim().isEmpty()) {
             saveMessage("usuario", userMessage, sessionId);
         }
     }
 
     /**
-     * Procesa la solicitud de texto.
+     * Procesa la solicitud de texto y formatea para SSE.
      */
     private Flux<String> processRequest(String sessionId, String userMessage, List<Message> messages) {
         StringBuilder responseBuilder = new StringBuilder();
@@ -80,35 +78,67 @@ public class ChatServiceImpl implements ChatService {
                 .user(userMessage)
                 .stream()
                 .content()
-                .doOnNext(responseBuilder::append) // Acumula la respuesta en el StringBuilder
-                .doOnComplete(() -> {
-                    String response = responseBuilder.toString();
-
-                    // Guardar la respuesta del asistente en la base de datos
-                    saveMessage("asistente", response, sessionId);
+                .filter(content -> content != null && !content.isEmpty()) // Filtrar contenido vacío
+                .map(content -> {
+                    // Formatear para Server-Sent Events
+                    return "data: " + content + "\n\n";
                 })
-                .doOnError(error -> log.error("Error al procesar el mensaje: {}", error.getMessage()));
+                .doOnNext(chunk -> {
+                    // Extraer el contenido del chunk para acumularlo
+                    String content = chunk.substring(6, chunk.length() - 2); // Remover "data: " y "\n\n"
+                    responseBuilder.append(content);
+                })
+                .doOnComplete(() -> {
+                    String fullResponse = responseBuilder.toString();
+
+                    // Guardar la respuesta completa del asistente en la base de datos
+                    if (!fullResponse.isEmpty()) {
+                        saveMessage("asistente", fullResponse, sessionId);
+                    }
+                })
+                .doOnError(error -> {
+                    log.error("Error al procesar el mensaje: {}", error.getMessage(), error);
+                })
+                .concatWith(Flux.just("data: [DONE]\n\n")) // Señal de finalización
+                .onErrorResume(error -> {
+                    log.error("Error en el stream: {}", error.getMessage(), error);
+                    return Flux.just(
+                            "data: Error al procesar la solicitud: " + error.getMessage() + "\n\n",
+                            "data: [DONE]\n\n"
+                    );
+                });
     }
 
     /**
      * Guarda un mensaje en la base de datos.
      */
     private void saveMessage(String rol, String message, String sessionId) {
-        messageRepository.save(MessageEntity.builder()
-                .rol(rol)
-                .content(message)
-                .createdAt(LocalDateTime.now())
-                .sessionId(sessionId)
-                .build());
+        try {
+            messageRepository.save(MessageEntity.builder()
+                    .rol(rol)
+                    .content(message)
+                    .createdAt(LocalDateTime.now())
+                    .sessionId(sessionId)
+                    .build());
+        } catch (Exception e) {
+            log.error("Error al guardar mensaje en BD: {}", e.getMessage(), e);
+        }
     }
 
     /**
      * Construye el historial de mensajes para una sesión dada.
      */
     private List<Message> buildHistory(String sessionId) {
-        return messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId).stream()
-                .map(this::convertAMessage)
-                .toList();
+        try {
+            List<MessageEntity> messageEntities = messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
+
+            return messageEntities.stream()
+                    .map(this::convertAMessage)
+                    .toList();
+        } catch (Exception e) {
+            log.error("Error al construir historial: {}", e.getMessage(), e);
+            return List.of(); // Retorna lista vacía en caso de error
+        }
     }
 
     /**
