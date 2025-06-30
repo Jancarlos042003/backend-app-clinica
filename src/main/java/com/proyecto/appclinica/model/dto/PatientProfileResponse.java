@@ -11,6 +11,7 @@ public record PatientProfileResponse(
         String dni,
         Date birthDate,
         String phone,
-        String email
+        String email,
+        String patientId
 ) {
 }

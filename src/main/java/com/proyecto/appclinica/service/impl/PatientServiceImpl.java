@@ -26,6 +26,7 @@ public class PatientServiceImpl implements PatientService {
                 .birthDate(patient.getBirthDate())
                 .phone(patient.getPhone())
                 .email(patient.getEmail())
+                .patientId(patient.getPatientId())
                 .build();
     }
 }
