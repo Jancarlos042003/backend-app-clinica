@@ -73,12 +73,20 @@ public class ChatServiceImpl implements ChatService {
      * Procesa la solicitud de texto.
      */
     private Flux<String> processRequest(String sessionId, String userMessage, List<Message> messages) {
+        StringBuilder responseBuilder = new StringBuilder();
+
         return chatClient.prompt()
                 .messages(messages)
                 .user(userMessage)
                 .stream()
                 .content()
-                .doOnNext(response -> saveMessage("asistente", response, sessionId))
+                .doOnNext(responseBuilder::append) // Acumula la respuesta en el StringBuilder
+                .doOnComplete(() -> {
+                    String response = responseBuilder.toString();
+
+                    // Guardar la respuesta del asistente en la base de datos
+                    saveMessage("asistente", response, sessionId);
+                })
                 .doOnError(error -> log.error("Error al procesar el mensaje: {}", error.getMessage()));
     }
 
