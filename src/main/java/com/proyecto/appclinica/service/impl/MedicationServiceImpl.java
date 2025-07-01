@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,9 @@ public class MedicationServiceImpl implements MedicationService {
         List<MedicationEntity> medications = medicationRepository.findAllByPatientIdAndTimeOfTakingBetween(
                 patientId, startTimestamp, endTimestamp);
 
+        // Ordenamos los medicamentos por hora de toma antes de convertir a DTOs
+        medications.sort(Comparator.comparing(MedicationEntity::getTimeOfTaking));
+
         // Convertimos las entidades a DTOs
         return medications.stream()
                 .map(this::mapToResponseDto)
@@ -88,6 +92,9 @@ public class MedicationServiceImpl implements MedicationService {
         // Buscamos medicamentos del paciente para este rango de fechas
         List<MedicationEntity> medications = medicationRepository.findAllByPatientIdAndTimeOfTakingBetween(
                 patientId, startTimestamp, endTimestamp);
+
+        // Ordenamos los medicamentos por hora de toma antes de convertir a DTOs
+        medications.sort(Comparator.comparing(MedicationEntity::getTimeOfTaking));
 
         // Convertimos las entidades a DTOs
         return medications.stream()
@@ -119,6 +126,9 @@ public class MedicationServiceImpl implements MedicationService {
         } catch (IllegalArgumentException e) {
             throw new StatusException("Estado de medicamento no válido: " + status);
         }
+
+        // Ordenamos los medicamentos por hora de toma antes de convertir a DTOs
+        medications.sort(Comparator.comparing(MedicationEntity::getTimeOfTaking));
 
         // Convertimos las entidades a DTOs
         return medications.stream()
