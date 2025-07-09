@@ -16,7 +16,7 @@ import reactor.core.publisher.Flux;
 public class ChatController {
     private final ChatService chatService;
 
-    @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE + ";charset=UTF-8")
     public Flux<String> sendMessage(@RequestBody ChatRequest request) {
         return chatService.chat(request);
     }
