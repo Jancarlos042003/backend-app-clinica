@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -79,14 +80,13 @@ public class ChatServiceImpl implements ChatService {
                 .stream()
                 .content()
                 .filter(content -> content != null && !content.isEmpty()) // Filtrar contenido vacío
-                .map(content -> {
-                    // Formatear para Server-Sent Events
-                    return "data: " + content + "\n\n";
-                })
-                .doOnNext(chunk -> {
-                    // Extraer el contenido del chunk para acumularlo
-                    String content = chunk.substring(6, chunk.length() - 2); // Remover "data: " y "\n\n"
+                .buffer(Duration.ofMillis(100)) // Agrupa fragmentos por 100ms
+                .map(contentList -> {
+                    String content = String.join("", contentList);
+                    // Acumular contenido para guardarlo en BD
                     responseBuilder.append(content);
+                    // Formatear para Server-Sent Events
+                    return content;
                 })
                 .doOnComplete(() -> {
                     String fullResponse = responseBuilder.toString();
@@ -99,7 +99,7 @@ public class ChatServiceImpl implements ChatService {
                 .doOnError(error -> {
                     log.error("Error al procesar el mensaje: {}", error.getMessage(), error);
                 })
-                .concatWith(Flux.just("data: [DONE]\n\n")) // Señal de finalización
+                .concatWith(Flux.just("[DONE]\n\n")) // Señal de finalización
                 .onErrorResume(error -> {
                     log.error("Error en el stream: {}", error.getMessage(), error);
                     return Flux.just(
