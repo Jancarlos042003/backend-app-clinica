@@ -79,6 +79,7 @@ public class ChatServiceImpl implements ChatService {
                 .stream()
                 .content()
                 .filter(content -> content != null && !content.isEmpty()) // Filtrar contenido vacío
+                .buffer(Duration.ofMillis(100)) // Agrupa fragmentos por 100ms
                 .map(content -> {
                     // Formatear para Server-Sent Events
                     return "data: " + content + "\n\n";
