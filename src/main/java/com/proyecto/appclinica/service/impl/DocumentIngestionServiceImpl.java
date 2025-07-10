@@ -1,6 +1,7 @@
 package com.proyecto.appclinica.service.impl;
 
 import com.proyecto.appclinica.exception.InvalidRequestException;
+import com.proyecto.appclinica.model.dto.DocumentUploadRequest;
 import com.proyecto.appclinica.model.dto.DocumentUploadResponse;
 import com.proyecto.appclinica.service.DocumentIngestionService;
 import com.proyecto.appclinica.util.MultipartFileResource;
@@ -27,7 +28,11 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService {
     private final KeywordMetadataEnricher metadataEnricher;
 
     @Override
-    public DocumentUploadResponse documentIngestion(MultipartFile file) {
+    public DocumentUploadResponse documentIngestion(DocumentUploadRequest uploadRequest) {
+        MultipartFile file = uploadRequest.getFile();
+        String category = uploadRequest.getCategory();
+        String specialty = uploadRequest.getSpecialty();
+
         if (file == null || file.isEmpty()) {
             log.error("El archivo no puede ser nulo o vacío.");
             throw new InvalidRequestException("El archivo no puede ser nulo o vacío.");
@@ -44,7 +49,7 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService {
         log.info("Iniciando la lectura del documento PDF: {}", file.getOriginalFilename());
         PagePdfDocumentReader documentReader = new PagePdfDocumentReader(resource);
         List<Document> documents = documentReader.get();
-        addMetadata(documents);
+        addMetadata(documents, category, specialty);
 
         // Normalización
         List<Document> normalizedDocuments = normalizeChunks(documents);
@@ -73,10 +78,16 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService {
         return contentType != null && contentType.equals("application/pdf");
     }
 
-    private void addMetadata(List<Document> documents){
+    private void addMetadata(List<Document> documents, String category, String specialty) {
         LocalDate publicationDate = LocalDate.now();
 
-        documents.forEach(document -> document.getMetadata().put("ingested_at", publicationDate.toString()));
+        documents.forEach(document -> {
+            document.getMetadata().put("ingested_at", publicationDate.toString());
+            document.getMetadata().put("category", category);
+            if (specialty != null && !specialty.isEmpty()) {
+                document.getMetadata().put("specialty", specialty);
+            }
+        });
     }
 
     private List<Document> normalizeChunks(List<Document> documents){

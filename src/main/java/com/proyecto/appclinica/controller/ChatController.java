@@ -1,9 +1,11 @@
 package com.proyecto.appclinica.controller;
 
 import com.proyecto.appclinica.model.dto.ChatRequest;
+import com.proyecto.appclinica.model.dto.DocumentUploadRequest;
 import com.proyecto.appclinica.model.dto.DocumentUploadResponse;
 import com.proyecto.appclinica.service.ChatService;
 import com.proyecto.appclinica.service.DocumentIngestionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,7 +27,7 @@ public class ChatController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<DocumentUploadResponse> uploadDocument(@RequestParam(name = "file") MultipartFile file) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ingestionService.documentIngestion(file));
+    public ResponseEntity<DocumentUploadResponse> uploadDocument(@Valid DocumentUploadRequest uploadRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ingestionService.documentIngestion(uploadRequest));
     }
 }
