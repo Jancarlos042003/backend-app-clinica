@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -23,12 +24,12 @@ import java.util.List;
 public class SymptomTool {
     private final SymptomDiaryService symptomDiaryService;
 
-    @Tool(name = "extract_symptom_data", description = "Registra uno o más síntomas clínicos del paciente. " +
-            "OBLIGATORIO: 'symptom' (nombre del síntoma) e 'intensity' (intensidad: Leve/Moderada/Severa). " +
-            "Opcionales: 'startTime' (fecha/hora de inicio) en formato ISO 8601 si no especifica establece la hora actual " +
-            "y 'notes' (observaciones adicionales).")
+    @Tool(name = "register_symptom", description = "Registra uno o más síntomas clínicos del paciente")
     @Transactional
-    public SymptomRegistrationResponse extract_symptom_data(List<SymptomInput> symptoms, String identifier) {
+    public SymptomRegistrationResponse register_symptom(
+            @ToolParam(description = "Lista de síntomas a procesar") List<SymptomInput> symptoms,
+            String identifier
+    ) {
         // Crear respuesta inicial
         SymptomRegistrationResponse response = new SymptomRegistrationResponse();
         response.setRegistrados(new ArrayList<>());

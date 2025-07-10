@@ -1,6 +1,8 @@
 package com.proyecto.appclinica.config;
 
+import com.proyecto.appclinica.tool.MedicationTool;
 import com.proyecto.appclinica.tool.SymptomTool;
+import com.proyecto.appclinica.tool.TreatmentTool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -14,13 +16,15 @@ import org.springframework.context.annotation.Primary;
 public class AiConfig {
     private final ChatClient.Builder chatClientBuilder;
     private final SymptomTool symptomTool;
+    private final TreatmentTool treatmentTool;
+    private final MedicationTool medicationTool;
 
     @Bean
     @Primary
     public ChatClient chatClient() {
         return chatClientBuilder
                 .defaultAdvisors() // Añadir advisors personalizados si es necesario
-                .defaultTools(symptomTool)
+                .defaultTools(symptomTool, treatmentTool, medicationTool)
                 .defaultSystem("""
                         Eres un asistente médico especializado en el seguimiento post-alta hospitalaria.
                         
