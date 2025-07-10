@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface MedicationService {
 
-    List<MedicationResponseDto> getMedicationsForToday(String identifier);
+    List<MedicationResponseDto> getMedicationsToday(String identifier);
 
-    List<MedicationResponseDto> getMedicationsForDate(String identifier, LocalDate date);
+    List<MedicationResponseDto> getMedicationsByDate(String identifier, LocalDate date);
 
     MedicationResponseDto updateMedicationStatus(MedicationStatusUpdateDto updateDto);
 
