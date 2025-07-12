@@ -10,6 +10,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -30,6 +31,7 @@ public class ChatServiceImpl implements ChatService {
     public Flux<String> chat(ChatRequest chatRequest) {
         String sessionId = chatRequest.getSessionId();
         String userMessage = chatRequest.getMessage();
+        String patientId = chatRequest.getPatientId();
 
         // Validar la petición
         if (!isValidRequest(userMessage)) {
@@ -45,7 +47,7 @@ public class ChatServiceImpl implements ChatService {
             saveUserInput(sessionId, userMessage);
 
             // Procesar la solicitud de texto
-            return processRequest(sessionId, userMessage, messages);
+            return processRequest(sessionId, userMessage, messages, patientId);
         } catch (Exception e) {
             log.error("Error inesperado en el procesamiento del mensaje: {}", e.getMessage(), e);
             return Flux.just("data: Error en el procesamiento: " + e.getMessage() + "\n\n");
@@ -71,7 +73,9 @@ public class ChatServiceImpl implements ChatService {
     /**
      * Procesa la solicitud de texto y formatea para SSE.
      */
-    private Flux<String> processRequest(String sessionId, String userMessage, List<Message> messages) {
+    private Flux<String> processRequest(String sessionId, String userMessage, List<Message> messages, String patientId) {
+        // Por el momento no se trabaja con "patientId"
+
         StringBuilder responseBuilder = new StringBuilder();
 
         return chatClient.prompt()
@@ -153,5 +157,22 @@ public class ChatServiceImpl implements ChatService {
                 yield new UserMessage(messageEntity.getContent()); // Por defecto, tratamos como mensaje de usuario
             }
         };
+    }
+
+    private void debugDocuments(List<Document> searchResults, String userMessage, String patientId) {
+        log.info("=== DEBUG BÚSQUEDA VECTORIAL ===");
+        log.info("Query: {}", userMessage);
+        log.info("PatientId: {}", patientId);
+        log.info("Documentos encontrados: {}", searchResults.size());
+
+        for (int i = 0; i < searchResults.size(); i++) {
+            var doc = searchResults.get(i);
+            log.info("Documento {}: Score={}, Metadata={}",
+                    i + 1,
+                    doc.getScore(),
+                    doc.getMetadata());
+            log.info("Contenido: {}", doc.getText().substring(0, Math.min(200, doc.getText().length())) + "...");
+        }
+        log.info("=== FIN DEBUG ===");
     }
 }

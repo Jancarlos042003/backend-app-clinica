@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class ChatRequest {
     private String sessionId;
     private String message;
+    private String patientId;
 }
