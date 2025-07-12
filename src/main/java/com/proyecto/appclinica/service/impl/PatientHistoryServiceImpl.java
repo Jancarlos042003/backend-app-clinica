@@ -153,7 +153,7 @@ public class PatientHistoryServiceImpl implements PatientHistoryService {
         List<Document> documents = List.of(
                 Document.builder()
                         .text(historySummary)
-                        .metadata(Map.of("patient_id", patientId, "summary_type", "patient_history"))
+                        .metadata(Map.of("patient_id", patientId, "category", "patient_history"))
                         .build()
         );
 

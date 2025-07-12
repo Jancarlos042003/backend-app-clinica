@@ -20,7 +20,7 @@ public class RagConfiguration {
 
     @Bean
     public DocumentTransformer documentTransformer(){
-        return new TokenTextSplitter(300, 100, 20, 100, true);
+        return new TokenTextSplitter(400, 150, 50, 200, true);
     }
 
     /**
@@ -41,8 +41,8 @@ public class RagConfiguration {
     public QuestionAnswerAdvisor questionAnswerAdvisor(){
         return QuestionAnswerAdvisor.builder(vectorStore)
                 .searchRequest(SearchRequest.builder()
-                        .topK(4)
-                        .similarityThreshold(0.7)
+                        .topK(5)
+                        .similarityThreshold(0.55)
                         .build())
                 .build();
     }
