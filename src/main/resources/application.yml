@@ -47,6 +47,19 @@ spring:
           model: gpt-4o-mini
           temperature: 0.7
 
+      # Configuracion de embeddings
+      embedding:
+        options:
+          model: text-embedding-3-small
+
+    # Configuracion de VectorStore
+    vectorstore:
+      pgvector:
+        dimensions: 1536
+        initialize-schema: true
+        distance-type: cosine_distance
+        index-type: hnsw
+
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:25}

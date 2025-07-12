@@ -1,6 +1,7 @@
 package com.proyecto.appclinica.service.impl;
 
 import com.proyecto.appclinica.event.patient.PatientCreatedEvent;
+import com.proyecto.appclinica.event.patient.PatientHistoryEvent;
 import com.proyecto.appclinica.exception.InvalidCodeException;
 import com.proyecto.appclinica.exception.ResourceNotFoundException;
 import com.proyecto.appclinica.model.dto.PatientProfileResponse;
@@ -94,6 +95,7 @@ public class AuthServiceImpl implements  AuthService {
         // Si el código es correcto, obtenemos el paciente de FHIR y publicamos el evento
         Patient patient = fhirPatientRepository.getPatientByIdentifier(identifier);
         eventPublisher.publishEvent(new PatientCreatedEvent(patient));
+        eventPublisher.publishEvent(new PatientHistoryEvent(patient.getIdElement().getIdPart()));
 
         return new VerifyCodeResponse("El código es correcto");
     }

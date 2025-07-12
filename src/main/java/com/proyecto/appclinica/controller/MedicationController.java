@@ -22,7 +22,7 @@ public class MedicationController {
     @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/today/{identifier}")
     public ResponseEntity<List<MedicationResponseDto>> getMedicationsForToday(@PathVariable String identifier) {
-        List<MedicationResponseDto> medications = medicationService.getMedicationsForToday(identifier);
+        List<MedicationResponseDto> medications = medicationService.getMedicationsToday(identifier);
         return ResponseEntity.ok(medications);
     }
 
@@ -31,7 +31,7 @@ public class MedicationController {
     public ResponseEntity<List<MedicationResponseDto>> getMedicationsForDate(
             @PathVariable String identifier,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<MedicationResponseDto> medications = medicationService.getMedicationsForDate(identifier, date);
+        List<MedicationResponseDto> medications = medicationService.getMedicationsByDate(identifier, date);
         return ResponseEntity.ok(medications);
     }
 

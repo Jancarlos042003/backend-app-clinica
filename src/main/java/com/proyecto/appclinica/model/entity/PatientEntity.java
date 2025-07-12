@@ -37,7 +37,6 @@ public class PatientEntity {
 
     private String phone;
 
-    @Column(unique = true)
     private String email;
 
     private String gender;

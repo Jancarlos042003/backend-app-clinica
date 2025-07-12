@@ -47,13 +47,13 @@ public class MedicationServiceImpl implements MedicationService {
     private final Map<String, Integer> reminderAttempts = new HashMap<>();
 
     @Override
-    public List<MedicationResponseDto> getMedicationsForToday(String identifier) {
+    public List<MedicationResponseDto> getMedicationsToday(String identifier) {
         LocalDate today = LocalDate.now();
-        return getMedicationsForDate(identifier, today);
+        return getMedicationsByDate(identifier, today);
     }
 
     @Override
-    public List<MedicationResponseDto> getMedicationsForDate(String identifier, LocalDate date) {
+    public List<MedicationResponseDto> getMedicationsByDate(String identifier, LocalDate date) {
         String patientId = PatientUtils.getPatientIdForIdentifier(identifier, fhirPatientRepository);
 
         // Calculamos el inicio y fin del día
