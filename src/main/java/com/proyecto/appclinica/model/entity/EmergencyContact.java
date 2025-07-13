@@ -1,8 +1,6 @@
 package com.proyecto.appclinica.model.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 
 @Entity
