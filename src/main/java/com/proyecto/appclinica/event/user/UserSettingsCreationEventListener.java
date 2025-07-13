@@ -17,12 +17,13 @@ public class UserSettingsCreationEventListener {
     @Async
     @EventListener
     public void handleUserSettingsCreation(UserSettingsCreationEvent event) {
-        log.info("Creando configuraciones de usuario para el usuario con ID: {}", event.getUserId());
+        String patientId = event.getPatientId();
+        log.info("Creando configuraciones de usuario para el usuario con ID: {}", patientId);
         try {
-            userSettingsService.createUserSettings(event.getUserId());
-            log.info("Configuraciones de usuario creadas exitosamente para el usuario con ID: {}", event.getUserId());
+            userSettingsService.createUserSettings(patientId);
+            log.info("Configuraciones de usuario creadas exitosamente para el usuario con ID: {}", patientId);
         } catch (Exception e) {
-            log.error("Error al crear configuraciones para el usuario con ID: {}", event.getUserId(), e);
+            log.error("Error al crear configuraciones para el usuario con ID: {}", patientId, e);
             // Implementar reintentos o notificaciones según sea necesario
         }
     }

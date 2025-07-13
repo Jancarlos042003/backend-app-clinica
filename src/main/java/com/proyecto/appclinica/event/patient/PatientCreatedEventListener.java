@@ -44,7 +44,7 @@ public class PatientCreatedEventListener {
 
         // Publicar evento para crear las configuraciones de usuario de manera asíncrona
         log.info("Publicando evento para crear configuraciones de usuario para paciente ID: {}", savedPatient.getId());
-        eventPublisher.publishEvent(new UserSettingsCreationEvent(savedPatient.getId()));
+        eventPublisher.publishEvent(new UserSettingsCreationEvent(savedPatient.getPatientId()));
 
         return savedPatient;
     }

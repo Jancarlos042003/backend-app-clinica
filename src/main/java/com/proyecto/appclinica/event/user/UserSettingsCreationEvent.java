@@ -6,5 +6,5 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class UserSettingsCreationEvent {
-    private Long userId;
+    private String patientId;
 }
