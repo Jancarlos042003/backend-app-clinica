@@ -121,6 +121,33 @@ public class SosServiceImpl implements SosService {
                 .toList();
     }
 
+    @Override
+    public List<SosResponse> getAllSos() {
+        List<SosEntity> sosEntities = sosRepository.findAll();
+
+        return sosEntities.stream()
+                .map(this::buildSosResponse)
+                .toList();
+    }
+
+    @Override
+    public List<SosResponse> getSosByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        List<SosEntity> sosEntities = sosRepository.findByDateTimeBetween(startDate, endDate);
+
+        return sosEntities.stream()
+                .map(this::buildSosResponse)
+                .toList();
+    }
+
+    @Override
+    public List<SosResponse> getSosByStatus(ESosStatus status) {
+        List<SosEntity> sosEntities = sosRepository.findByStatus(status);
+
+        return sosEntities.stream()
+                .map(this::buildSosResponse)
+                .toList();
+    }
+
     private String createAiReport(String patientId) {
         log.info("Generando informe AI para el paciente con ID: {}", patientId);
 
