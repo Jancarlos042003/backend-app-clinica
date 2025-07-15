@@ -8,13 +8,14 @@ import com.proyecto.appclinica.model.dto.SosUpdateRequest;
 import com.proyecto.appclinica.model.entity.ESosStatus;
 import com.proyecto.appclinica.model.entity.PatientEntity;
 import com.proyecto.appclinica.model.entity.SosEntity;
+import com.proyecto.appclinica.model.entity.UserSettings;
 import com.proyecto.appclinica.repository.PatientRepository;
 import com.proyecto.appclinica.repository.SosRepository;
+import com.proyecto.appclinica.repository.UserSettingsRepository;
 import com.proyecto.appclinica.service.SosService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
@@ -30,8 +31,8 @@ public class SosServiceImpl implements SosService {
     private final PatientRepository patientRepository;
     private final ChatClient chatClient;
     private final SosRepository sosRepository;
+    private final UserSettingsRepository userSettingsRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final VectorStore vectorStore;
 
     public SosServiceImpl(PatientRepository patientRepository,
                           // Uso de @Lazy para evitar problemas de dependencia circular al diferir
@@ -39,21 +40,21 @@ public class SosServiceImpl implements SosService {
                           // y @Qualifier para especificar el cliente de chat correcto
                           @Lazy @Qualifier("sosChatClient") ChatClient chatClient,
                           SosRepository sosRepository,
-                          ApplicationEventPublisher eventPublisher,
-                          VectorStore vectorStore) {
+                          UserSettingsRepository userSettingsRepository,
+                          ApplicationEventPublisher eventPublisher) {
         this.patientRepository = patientRepository;
         this.chatClient = chatClient;
         this.sosRepository = sosRepository;
+        this.userSettingsRepository = userSettingsRepository;
         this.eventPublisher = eventPublisher;
-        this.vectorStore = vectorStore;
     }
 
     @Override
     public SosResponse createSos(SosRequest sosRequest) {
-        PatientEntity patient = patientRepository.findById(Long.valueOf(sosRequest.getPatientId()))
+        PatientEntity patient = patientRepository.findByPatientId(sosRequest.getPatientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente", "ID", sosRequest.getPatientId()));
 
-        String aiReport = createAiReport(patient.getPatientId());
+        String aiReport = createAiReport(patient.getPatientId(), patient.getDni());
         log.info("Informe AI generado: {}", aiReport);
 
         SosEntity newSos = SosEntity.builder()
@@ -69,8 +70,14 @@ public class SosServiceImpl implements SosService {
 
         SosEntity savedSos = sosRepository.save(newSos);
 
+        UserSettings userSettings = userSettingsRepository.findByPatientId(patient.getPatientId())
+                .orElseThrow(() -> new ResourceNotFoundException("Configuración de usuario no encontrada para el paciente con ID: " + patient.getPatientId()));
+
+        // ⚠️ Forzar la carga de emergencyContacts mientras aún estás en la sesión activa
+        userSettings.getEmergencyContacts().size(); // O usar Hibernate.initialize(userSettings.getEmergencyContacts())
+
         // Publicar evento para notificar a los contactos de emergencia
-        eventPublisher.publishEvent(new AlertSosCreateEvent(patient, savedSos));
+        eventPublisher.publishEvent(new AlertSosCreateEvent(patient, savedSos, userSettings));
 
         return buildSosResponse(savedSos);
     }
@@ -148,12 +155,13 @@ public class SosServiceImpl implements SosService {
                 .toList();
     }
 
-    private String createAiReport(String patientId) {
+    private String createAiReport(String patientId, String identifier) {
         log.info("Generando informe AI para el paciente con ID: {}", patientId);
 
 
         return chatClient.prompt()
-                .user("Genera un informe médico de emergencia completo para el paciente con ID: " + patientId +
+                .user("Genera un informe médico de emergencia completo. El identifier es " + identifier +
+                        " que corresponde al DNI del paciente y el patientId " + patientId + " es el ID único del paciente en el sistema" +
                         ". Sigue el protocolo establecido comenzando por los registros SOS y utiliza todas las herramientas disponibles.")
                 .advisors(a -> a.param(QuestionAnswerAdvisor.FILTER_EXPRESSION,
                         String.format("category == 'patient_history' AND patient_id == '%s'", patientId)))
