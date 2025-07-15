@@ -11,21 +11,21 @@ import java.util.List;
 
 public interface UserSettingsService {
 
-    UserSettings getUserSettings(Long userId);
+    UserSettings getUserSettings(String patientId);
 
-    UserSettingsResponseDTO getUserSettingsResponse(Long userId);
+    UserSettingsResponseDTO getUserSettingsResponse(String patientId);
 
-    UserSettings createUserSettings(Long userId);
+    UserSettings createUserSettings(String patientId);
 
-    MedicationSettingsDTO updateMedicationSettings(Long userId, @Valid MedicationSettingsDTO medicationSettingsDTO);
+    MedicationSettingsDTO updateMedicationSettings(String patientId, @Valid MedicationSettingsDTO medicationSettingsDTO);
 
-    MedicationSettingsDTO getMedicationSettings(Long userId);
+    MedicationSettingsDTO getMedicationSettings(String patientId);
 
-    List<EmergencyContactResponseDTO> getEmergencyContacts(Long userId);
+    List<EmergencyContactResponseDTO> getEmergencyContacts(String patientId);
 
-    EmergencyContactResponseDTO addEmergencyContact(Long userId, EmergencyContactCreateDTO contactDTO);
+    EmergencyContactResponseDTO addEmergencyContact(String patientId, EmergencyContactCreateDTO contactDTO);
 
-    EmergencyContactResponseDTO updateEmergencyContact(Long userId, Long contactId, EmergencyContactCreateDTO contactDTO);
+    EmergencyContactResponseDTO updateEmergencyContact(String patientId, Long contactId, EmergencyContactCreateDTO contactDTO);
 
-    void deleteEmergencyContact(Long userId, Long contactId);
+    void deleteEmergencyContact(String patientId, Long contactId);
 }

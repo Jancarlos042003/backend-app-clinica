@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,33 +26,33 @@ public class UserSettingsServiceImpl implements UserSettingsService {
     private final UserSettingsRepository userSettingsRepository;
 
     @Override
-    public UserSettings getUserSettings(Long userId) {
-        return userSettingsRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("UserSettings", "ID usuario", userId));
+    public UserSettings getUserSettings(String patientId) {
+        return userSettingsRepository.findByPatientId(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException("UserSettings", "paciente con ID", patientId));
     }
 
     @Override
-    public UserSettingsResponseDTO getUserSettingsResponse(Long userId) {
-        UserSettings settings = getUserSettings(userId);
+    public UserSettingsResponseDTO getUserSettingsResponse(String patientId) {
+        UserSettings settings = getUserSettings(patientId);
         return UserSettingsMapper.toResponseDto(settings);
     }
 
     @Override
     @Transactional
-    public UserSettings createUserSettings(Long userId) {
-        if (userId == null) {
+    public UserSettings createUserSettings(String patientId) {
+        if (patientId == null) {
             throw new InvalidRequestException("El ID de usuario no puede ser nulo");
         }
 
         // Verificar si ya existe
-        if (userSettingsRepository.findByUserId(userId).isPresent()) {
-            return getUserSettings(userId);
+        if (userSettingsRepository.findByPatientId(patientId).isPresent()) {
+            return getUserSettings(patientId);
         }
 
         // Crear configuraciones con valores por defecto
         MedicationSettings medicationSettings = MedicationSettings.builder().build();
         UserSettings userSettings = UserSettings.builder()
-                .userId(userId)
+                .patientId(patientId)
                 .medicationSettings(medicationSettings)
                 .build();
 
@@ -61,8 +60,8 @@ public class UserSettingsServiceImpl implements UserSettingsService {
     }
 
     @Override
-    public MedicationSettingsDTO updateMedicationSettings(Long userId, @Valid MedicationSettingsDTO medicationSettingsDTO) {
-        UserSettings userSettings = getUserSettings(userId);
+    public MedicationSettingsDTO updateMedicationSettings(String patientId, @Valid MedicationSettingsDTO medicationSettingsDTO) {
+        UserSettings userSettings = getUserSettings(patientId);
 
         // Validar que reminderFrequencyMinutes no sea mayor que toleranceWindowMinutes
         if (medicationSettingsDTO.getReminderFrequencyMinutes() > medicationSettingsDTO.getToleranceWindowMinutes()) {
@@ -87,22 +86,22 @@ public class UserSettingsServiceImpl implements UserSettingsService {
     }
 
     @Override
-    public MedicationSettingsDTO getMedicationSettings(Long userId) {
-        UserSettings userSettings = getUserSettings(userId);
+    public MedicationSettingsDTO getMedicationSettings(String patientId) {
+        UserSettings userSettings = getUserSettings(patientId);
         return UserSettingsMapper.toDto(userSettings.getMedicationSettings());
     }
 
     @Override
-    public List<EmergencyContactResponseDTO> getEmergencyContacts(Long userId) {
-        UserSettings userSettings = getUserSettings(userId);
+    public List<EmergencyContactResponseDTO> getEmergencyContacts(String patientId) {
+        UserSettings userSettings = getUserSettings(patientId);
         return userSettings.getEmergencyContacts().stream()
                 .map(UserSettingsMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
-    public EmergencyContactResponseDTO addEmergencyContact(Long userId, EmergencyContactCreateDTO contactDTO) {
-        UserSettings userSettings = getUserSettings(userId);
+    public EmergencyContactResponseDTO addEmergencyContact(String patientId, EmergencyContactCreateDTO contactDTO) {
+        UserSettings userSettings = getUserSettings(patientId);
 
         // Validar el número de teléfono
         if (!isValidPhoneNumber(contactDTO.getPhoneNumber())) {
@@ -126,7 +125,7 @@ public class UserSettingsServiceImpl implements UserSettingsService {
         // Obtener el contacto recién guardado con el ID asignado
         EmergencyContact savedContact = savedSettings.getEmergencyContacts().stream()
                 .filter(c -> c.getPhoneNumber().equals(contactDTO.getPhoneNumber())
-                      && c.getName().equals(contactDTO.getName()))
+                        && c.getName().equals(contactDTO.getName()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Error al recuperar el contacto guardado"));
 
@@ -140,8 +139,8 @@ public class UserSettingsServiceImpl implements UserSettingsService {
 
     @Override
     @Transactional
-    public EmergencyContactResponseDTO updateEmergencyContact(Long userId, Long contactId, EmergencyContactCreateDTO updatedContactDTO) {
-        UserSettings userSettings = getUserSettings(userId);
+    public EmergencyContactResponseDTO updateEmergencyContact(String patientId, Long contactId, EmergencyContactCreateDTO updatedContactDTO) {
+        UserSettings userSettings = getUserSettings(patientId);
 
         EmergencyContact contact = userSettings.getEmergencyContacts().stream()
                 .filter(c -> c.getId().equals(contactId))
@@ -158,8 +157,8 @@ public class UserSettingsServiceImpl implements UserSettingsService {
 
     @Override
     @Transactional
-    public void deleteEmergencyContact(Long userId, Long contactId) {
-        UserSettings settings = getUserSettings(userId);
+    public void deleteEmergencyContact(String patientId, Long contactId) {
+        UserSettings settings = getUserSettings(patientId);
 
         EmergencyContact contact = settings.getEmergencyContacts().stream()
                 .filter(c -> c.getId().equals(contactId))

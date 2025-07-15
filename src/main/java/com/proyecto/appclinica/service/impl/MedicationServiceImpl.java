@@ -184,7 +184,7 @@ public class MedicationServiceImpl implements MedicationService {
             LocalDateTime scheduledTime = medication.getTimeOfTaking().toLocalDateTime();
 
             // Obtenemos la configuración de medicamentos del usuario
-            Optional<UserSettings> userSettingsOpt = userSettingsRepository.findByUserId(Long.valueOf(patientId));
+            Optional<UserSettings> userSettingsOpt = userSettingsRepository.findByPatientId(patientId);
 
             // Si no hay configuración, usamos valores por defecto
             MedicationSettings medicationSettings = userSettingsOpt

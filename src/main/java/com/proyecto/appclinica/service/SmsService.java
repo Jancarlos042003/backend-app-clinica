@@ -12,16 +12,12 @@ public class SmsService {
 
     /**
      * Envía un SMS a un número destino.
-     * @param to número destino con formato E.164, e.g. +51987654321
+     *
+     * @param to   número destino con formato E.164, e.g. +51987654321
      * @param body cuerpo del mensaje
-     * @return SID del mensaje enviado
      */
-    public String sendSms(String to, String body) {
-        Message message = Message.creator(
-                        new PhoneNumber(to),
-                        new PhoneNumber(from),
-                        body)
+    public void sendSms(String to, String body) {
+        Message.creator(new PhoneNumber(to), new PhoneNumber(from), body)
                 .create();
-        return message.getSid();
     }
 }

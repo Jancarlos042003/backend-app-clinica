@@ -28,8 +28,8 @@ public class UserSettings {
     @Builder.Default
     private List<EmergencyContact> emergencyContacts = new ArrayList<>();
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "patient_id", nullable = false)
+    private String patientId;
 
     public void addEmergencyContact(EmergencyContact contact) {
         if (contact != null) {

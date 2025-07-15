@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class UserSettingsResponseDTO {
     private Long id;
-    private Long userId;
+    private String patientId;
     private MedicationSettingsDTO medicationSettings;
 
     @Builder.Default

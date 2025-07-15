@@ -65,12 +65,12 @@ public class UserSettingsMapper {
 
         return UserSettingsResponseDTO.builder()
                 .id(entity.getId())
-                .userId(entity.getUserId())
+                .patientId(entity.getPatientId())
                 .medicationSettings(toDto(entity.getMedicationSettings()))
                 .emergencyContacts(
                         entity.getEmergencyContacts().stream()
                                 .map(UserSettingsMapper::toResponseDto)
-                                .collect(Collectors.toList())
+                                .toList()
                 )
                 .build();
     }
