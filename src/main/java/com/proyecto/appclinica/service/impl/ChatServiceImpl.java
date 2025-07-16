@@ -10,7 +10,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.document.Document;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -74,13 +74,18 @@ public class ChatServiceImpl implements ChatService {
      * Procesa la solicitud de texto y formatea para SSE.
      */
     private Flux<String> processRequest(String sessionId, String userMessage, List<Message> messages, String patientId) {
-        // Por el momento no se trabaja con "patientId"
-
         StringBuilder responseBuilder = new StringBuilder();
+
+        // Construir el mensaje del usuario incluyendo el patientId para que las herramientas puedan usarlo
+        String enhancedUserMessage = """
+        PATIENT_ID: %s
+
+        Consulta del paciente: %s
+        """.formatted(patientId, userMessage);
 
         return chatClient.prompt()
                 .messages(messages)
-                .user(userMessage)
+                .user(enhancedUserMessage)
                 .stream()
                 .content()
                 .filter(content -> content != null && !content.isEmpty()) // Filtrar contenido vacío
@@ -157,22 +162,5 @@ public class ChatServiceImpl implements ChatService {
                 yield new UserMessage(messageEntity.getContent()); // Por defecto, tratamos como mensaje de usuario
             }
         };
-    }
-
-    private void debugDocuments(List<Document> searchResults, String userMessage, String patientId) {
-        log.info("=== DEBUG BÚSQUEDA VECTORIAL ===");
-        log.info("Query: {}", userMessage);
-        log.info("PatientId: {}", patientId);
-        log.info("Documentos encontrados: {}", searchResults.size());
-
-        for (int i = 0; i < searchResults.size(); i++) {
-            var doc = searchResults.get(i);
-            log.info("Documento {}: Score={}, Metadata={}",
-                    i + 1,
-                    doc.getScore(),
-                    doc.getMetadata());
-            log.info("Contenido: {}", doc.getText().substring(0, Math.min(200, doc.getText().length())) + "...");
-        }
-        log.info("=== FIN DEBUG ===");
     }
 }

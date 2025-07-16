@@ -24,5 +24,5 @@ public class SymptomDto {
     @Size(max = 1000)
     private String notes;  // Notas adicionales
 
-    private String identifier;  // ID del paciente al que pertenece el síntoma
+    private String patientId;  // ID del paciente al que pertenece el síntoma
 }

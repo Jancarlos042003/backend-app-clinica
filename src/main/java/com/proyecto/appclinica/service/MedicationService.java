@@ -8,15 +8,15 @@ import java.util.List;
 
 public interface MedicationService {
 
-    List<MedicationResponseDto> getMedicationsToday(String identifier);
+    List<MedicationResponseDto> getMedicationsToday(String patientId);
 
-    List<MedicationResponseDto> getMedicationsByDate(String identifier, LocalDate date);
+    List<MedicationResponseDto> getMedicationsByDate(String patientId, LocalDate date);
 
     MedicationResponseDto updateMedicationStatus(MedicationStatusUpdateDto updateDto);
 
     void checkPendingMedications();
 
-    List<MedicationResponseDto> getMedicationsInDateRange(String identifier, LocalDate startDate, LocalDate endDate);
+    List<MedicationResponseDto> getMedicationsInDateRange(String patientId, LocalDate startDate, LocalDate endDate);
 
-    List<MedicationResponseDto> getMedicationsByDateRangeAndStatus(String identifier, LocalDate startDate, LocalDate endDate, String status);
+    List<MedicationResponseDto> getMedicationsByDateRangeAndStatus(String patientId, LocalDate startDate, LocalDate endDate, String status);
 }

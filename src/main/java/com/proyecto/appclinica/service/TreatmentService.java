@@ -15,7 +15,7 @@ public interface TreatmentService {
 
     TreatmentResultDto completeTreatment(String medicationRequestId);
 
-    List<TreatmentRecordDto> getAllMedicationRequestsByPatientId(String identifier);
+    List<TreatmentRecordDto> getAllMedicationRequestsByPatientId(String patientId);
 
-    List<TreatmentRecordDto> getAllMedicationRequestsByPatientIdAndStatus(String identifier, String status);
+    List<TreatmentRecordDto> getAllMedicationRequestsByPatientIdAndStatus(String patientId, String status);
 }

@@ -47,15 +47,13 @@ public class MedicationServiceImpl implements MedicationService {
     private final Map<String, Integer> reminderAttempts = new HashMap<>();
 
     @Override
-    public List<MedicationResponseDto> getMedicationsToday(String identifier) {
+    public List<MedicationResponseDto> getMedicationsToday(String patientId) {
         LocalDate today = LocalDate.now();
-        return getMedicationsByDate(identifier, today);
+        return getMedicationsByDate(patientId, today);
     }
 
     @Override
-    public List<MedicationResponseDto> getMedicationsByDate(String identifier, LocalDate date) {
-        String patientId = PatientUtils.getPatientIdForIdentifier(identifier, fhirPatientRepository);
-
+    public List<MedicationResponseDto> getMedicationsByDate(String patientId, LocalDate date) {
         // Calculamos el inicio y fin del día
         LocalDateTime startOfDay = date.atStartOfDay(); // Inicio del día a las 00:00
         LocalDateTime endOfDay = date.atTime(LocalTime.MAX); // Fin del día a las 23:59:59.9999999999
@@ -78,9 +76,7 @@ public class MedicationServiceImpl implements MedicationService {
     }
 
     @Override
-    public List<MedicationResponseDto> getMedicationsInDateRange(String identifier, LocalDate startDate, LocalDate endDate) {
-        String patientId = PatientUtils.getPatientIdForIdentifier(identifier, fhirPatientRepository);
-
+    public List<MedicationResponseDto> getMedicationsInDateRange(String patientId, LocalDate startDate, LocalDate endDate) {
         // Calculamos el inicio y fin de los días respectivos
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
@@ -103,9 +99,7 @@ public class MedicationServiceImpl implements MedicationService {
     }
 
     @Override
-    public List<MedicationResponseDto> getMedicationsByDateRangeAndStatus(String identifier, LocalDate startDate, LocalDate endDate, String status) {
-        String patientId = PatientUtils.getPatientIdForIdentifier(identifier, fhirPatientRepository);
-
+    public List<MedicationResponseDto> getMedicationsByDateRangeAndStatus(String patientId, LocalDate startDate, LocalDate endDate, String status) {
         // Calculamos el inicio y fin de los días respectivos
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
