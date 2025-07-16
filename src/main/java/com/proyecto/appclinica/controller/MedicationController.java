@@ -20,18 +20,18 @@ public class MedicationController {
     private final MedicationService medicationService;
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/today/{identifier}")
-    public ResponseEntity<List<MedicationResponseDto>> getMedicationsForToday(@PathVariable String identifier) {
-        List<MedicationResponseDto> medications = medicationService.getMedicationsToday(identifier);
+    @GetMapping("/today/{patientId}")
+    public ResponseEntity<List<MedicationResponseDto>> getMedicationsForToday(@PathVariable String patientId) {
+        List<MedicationResponseDto> medications = medicationService.getMedicationsToday(patientId);
         return ResponseEntity.ok(medications);
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/{identifier}")
+    @GetMapping("/{patientId}")
     public ResponseEntity<List<MedicationResponseDto>> getMedicationsForDate(
-            @PathVariable String identifier,
+            @PathVariable String patientId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<MedicationResponseDto> medications = medicationService.getMedicationsByDate(identifier, date);
+        List<MedicationResponseDto> medications = medicationService.getMedicationsByDate(patientId, date);
         return ResponseEntity.ok(medications);
     }
 
@@ -44,24 +44,24 @@ public class MedicationController {
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/range/{identifier}")
+    @GetMapping("/range/{patientId}")
     public ResponseEntity<List<MedicationResponseDto>> getMedicationsInDateRange(
-            @PathVariable String identifier,
+            @PathVariable String patientId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        List<MedicationResponseDto> medications = medicationService.getMedicationsInDateRange(identifier, startDate, endDate);
+        List<MedicationResponseDto> medications = medicationService.getMedicationsInDateRange(patientId, startDate, endDate);
         return ResponseEntity.ok(medications);
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/range/{identifier}/status")
+    @GetMapping("/range/{patientId}/status")
     public ResponseEntity<List<MedicationResponseDto>> getMedicationsByDateRangeAndStatus(
-            @PathVariable String identifier,
+            @PathVariable String patientId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam String status) {
         List<MedicationResponseDto> medications = medicationService.getMedicationsByDateRangeAndStatus(
-                identifier, startDate, endDate, status);
+                patientId, startDate, endDate, status);
         return ResponseEntity.ok(medications);
     }
 }

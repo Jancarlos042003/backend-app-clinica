@@ -45,16 +45,16 @@ public class TreatmentController {
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/patient/{identifier}/all")
-    public ResponseEntity<List<TreatmentRecordDto>> getAllMedicationRequestsByPatientId(@PathVariable String identifier) {
-        return ResponseEntity.ok(treatmentService.getAllMedicationRequestsByPatientId(identifier));
+    @GetMapping("/patient/{patientId}/all")
+    public ResponseEntity<List<TreatmentRecordDto>> getAllMedicationRequestsByPatientId(@PathVariable String patientId) {
+        return ResponseEntity.ok(treatmentService.getAllMedicationRequestsByPatientId(patientId));
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/patient/{identifier}/all/{status}")
+    @GetMapping("/patient/{patientId}/all/{status}")
     public ResponseEntity<List<TreatmentRecordDto>> getAllMedicationRequestsByPatientIdAndStatus(
-            @PathVariable String identifier,
+            @PathVariable String patientId,
             @PathVariable String status) {
-        return ResponseEntity.ok(treatmentService.getAllMedicationRequestsByPatientIdAndStatus(identifier, status));
+        return ResponseEntity.ok(treatmentService.getAllMedicationRequestsByPatientIdAndStatus(patientId, status));
     }
 }
