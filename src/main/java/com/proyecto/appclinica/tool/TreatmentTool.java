@@ -18,8 +18,8 @@ public class TreatmentTool {
     @Tool(name = "get_treatment_by_status", description = "Obtener tratamientos médicos por estado")
     public List<TreatmentRecordDto> getTreatmentByStatus(
             @ToolParam(description = "Estado del tratamiento (cancelled/ completed/ active)") String status,
-            @ToolParam(description = "Identificador único del paciente")  String patientId
-    ){
+            @ToolParam(description = "Identificador único del paciente") String patientId
+    ) {
         if (status == null || patientId == null) {
             throw new InvalidRequestException("Los parámetros 'status' e 'identifier' son obligatorios.");
         }
