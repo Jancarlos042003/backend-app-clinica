@@ -39,7 +39,8 @@ public class CreateTreatmentDto {
     @NotNull(message = "La unidad de duración es obligatoria")
     private String durationUnit;
 
-    private String identifier;
+    @NotNull(message = "El dni del paciente es obligatorio")
+    private String dni;
 
     // Campos para horarios irregulares
     private Boolean isIrregular = false;

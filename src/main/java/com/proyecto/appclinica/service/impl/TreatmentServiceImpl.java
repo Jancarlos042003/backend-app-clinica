@@ -42,12 +42,10 @@ public class TreatmentServiceImpl implements TreatmentService {
     public TreatmentRecordDto createTreatment(CreateTreatmentDto treatmentDTO) {
         MedicationRequest request = new MedicationRequest();
 
-        String patientId = PatientUtils.getPatientIdForIdentifier(treatmentDTO.getIdentifier(), fhirPatientRepository);
+        String patientId = PatientUtils.getPatientIdForIdentifier(treatmentDTO.getDni(), fhirPatientRepository);
 
         // Referencia al paciente
-        if (treatmentDTO.getIdentifier() != null) {
-            request.setSubject(new Reference("Patient/" + patientId));
-        }
+        request.setSubject(new Reference("Patient/" + patientId));
 
         // Medicamento con codificación
         CodeableConcept medicationConcept = createMedicationCodeableConcept(treatmentDTO);
@@ -174,16 +172,14 @@ public class TreatmentServiceImpl implements TreatmentService {
         return resultDto;
     }
 
-    public List<TreatmentRecordDto> getAllMedicationRequestsByPatientId(String identifier) {
-        String patientId = PatientUtils.getPatientIdForIdentifier(identifier, fhirPatientRepository);
+    public List<TreatmentRecordDto> getAllMedicationRequestsByPatientId(String patientId) {
         List<MedicationRequest> medicationRequests = fhirMedicationRequestRepository.findMedicationRequestsByPatientId(patientId);
         return medicationRequests.stream()
                 .map(this::convertToTreatmentRecordDto)
                 .toList();
     }
 
-    public List<TreatmentRecordDto> getAllMedicationRequestsByPatientIdAndStatus(String identifier, String status) {
-        String patientId = PatientUtils.getPatientIdForIdentifier(identifier, fhirPatientRepository);
+    public List<TreatmentRecordDto> getAllMedicationRequestsByPatientIdAndStatus(String patientId, String status) {
         List<MedicationRequest> medicationRequests = fhirMedicationRequestRepository.findMedicationRequestsByPatientIdAndStatus(patientId, status);
         return medicationRequests.stream()
                 .map(this::convertToTreatmentRecordDto)
