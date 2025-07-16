@@ -16,7 +16,7 @@ public class TreatmentTool {
     private final TreatmentService treatmentService;
 
     @Tool(name = "get_treatment_by_status", description = "Obtener tratamientos médicos por estado")
-    public List<TreatmentRecordDto> get_treatment_by_status(
+    public List<TreatmentRecordDto> getTreatmentByStatus(
             @ToolParam(description = "Estado del tratamiento (cancelled/ completed/ active)") String status,
             @ToolParam(description = "Identificador único del paciente")  String patientId
     ){

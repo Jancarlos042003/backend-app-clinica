@@ -26,7 +26,7 @@ public class SymptomTool {
 
     @Tool(name = "register_symptom", description = "Registra uno o más síntomas clínicos del paciente")
     @Transactional
-    public SymptomRegistrationResponse register_symptom(
+    public SymptomRegistrationResponse registerSymptom(
             @ToolParam(description = "Lista de síntomas a procesar") List<SymptomInput> symptoms,
             String patientId
     ) {
@@ -87,7 +87,7 @@ public class SymptomTool {
     }
 
     @Tool(name = "get_patient_symptoms", description = "Obtiene los síntomas registrados del paciente actual.")
-    public List<SymptomRecordDto> get_patient_symptoms(String patientId) {
+    public List<SymptomRecordDto> gerPatientSymptoms(String patientId) {
         try {
             // Usar el servicio para obtener todos los síntomas del paciente
             return symptomDiaryService.getAllPatientSymptomDiaries(patientId);
@@ -98,7 +98,7 @@ public class SymptomTool {
     }
 
     @Tool(name = "get_today_symptoms", description = "Obtiene los síntomas registrados del paciente en el día actual.")
-    public List<SymptomRecordDto> get_today_symptoms(String patientId) {
+    public List<SymptomRecordDto> getTodaySymptoms(String patientId) {
         try {
             // Usar el servicio para obtener los síntomas del día actual
             return symptomDiaryService.getTodaySymptomsByPatient(patientId);
@@ -110,7 +110,7 @@ public class SymptomTool {
 
     @Tool(name = "get_symptoms_by_date_range", description = "Obtiene los síntomas registrados del paciente en un rango de fechas. " +
             "Formato de fecha: yyyy-MM-dd")
-    public List<SymptomRecordDto> get_symptoms_by_date_range(String startDate, String endDate, String patientId) {
+    public List<SymptomRecordDto> getSymptomsByDateRange(String startDate, String endDate, String patientId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         try {
