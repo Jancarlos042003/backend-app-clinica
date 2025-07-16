@@ -28,7 +28,7 @@ public class SymptomTool {
     @Transactional
     public SymptomRegistrationResponse register_symptom(
             @ToolParam(description = "Lista de síntomas a procesar") List<SymptomInput> symptoms,
-            String identifier
+            String patientId
     ) {
         // Crear respuesta inicial
         SymptomRegistrationResponse response = new SymptomRegistrationResponse();
@@ -60,7 +60,7 @@ public class SymptomTool {
                 SymptomDto symptomDto = new SymptomDto();
                 symptomDto.setSymptom(symptom);
                 symptomDto.setIntensity(intensity);
-                symptomDto.setIdentifier(identifier);
+                symptomDto.setPatientId(patientId);
 
                 // Manejar la fecha si está presente
                 if (input.getStartTime() != null && !input.getStartTime().isBlank()) {
@@ -87,10 +87,10 @@ public class SymptomTool {
     }
 
     @Tool(name = "get_patient_symptoms", description = "Obtiene los síntomas registrados del paciente actual.")
-    public List<SymptomRecordDto> get_patient_symptoms(String identifier) {
+    public List<SymptomRecordDto> get_patient_symptoms(String patientId) {
         try {
             // Usar el servicio para obtener todos los síntomas del paciente
-            return symptomDiaryService.getAllPatientSymptomDiaries(identifier);
+            return symptomDiaryService.getAllPatientSymptomDiaries(patientId);
         } catch (Exception e) {
             log.error("Error al obtener síntomas del paciente: {}", e.getMessage());
             return new ArrayList<>();
@@ -98,10 +98,10 @@ public class SymptomTool {
     }
 
     @Tool(name = "get_today_symptoms", description = "Obtiene los síntomas registrados del paciente en el día actual.")
-    public List<SymptomRecordDto> get_today_symptoms(String identifier) {
+    public List<SymptomRecordDto> get_today_symptoms(String patientId) {
         try {
             // Usar el servicio para obtener los síntomas del día actual
-            return symptomDiaryService.getTodaySymptomsByPatient(identifier);
+            return symptomDiaryService.getTodaySymptomsByPatient(patientId);
         } catch (Exception e) {
             log.error("Error al obtener síntomas del día actual: {}", e.getMessage());
             return new ArrayList<>();
@@ -110,14 +110,14 @@ public class SymptomTool {
 
     @Tool(name = "get_symptoms_by_date_range", description = "Obtiene los síntomas registrados del paciente en un rango de fechas. " +
             "Formato de fecha: yyyy-MM-dd")
-    public List<SymptomRecordDto> get_symptoms_by_date_range(String startDate, String endDate, String identifier) {
+    public List<SymptomRecordDto> get_symptoms_by_date_range(String startDate, String endDate, String patientId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         try {
             LocalDate start = LocalDate.parse(startDate, formatter);
             LocalDate end = LocalDate.parse(endDate, formatter);
 
-            return symptomDiaryService.getPatientSymptomDiariesByDateRange(identifier, start, end);
+            return symptomDiaryService.getPatientSymptomDiariesByDateRange(patientId, start, end);
         } catch (DateTimeParseException e) {
             log.error("Error en formato de fechas: {}", e.getMessage());
             return new ArrayList<>();

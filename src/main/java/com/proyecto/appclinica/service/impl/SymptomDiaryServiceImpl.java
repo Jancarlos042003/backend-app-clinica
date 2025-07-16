@@ -3,13 +3,12 @@ package com.proyecto.appclinica.service.impl;
 import com.proyecto.appclinica.constant.FhirConstants;
 import com.proyecto.appclinica.constant.IntensityCodes;
 import com.proyecto.appclinica.constant.SymptomCodes;
+import com.proyecto.appclinica.exception.InvalidRequestException;
 import com.proyecto.appclinica.model.dto.symptom.SymptomDto;
 import com.proyecto.appclinica.model.dto.symptom.SymptomRecordDto;
 import com.proyecto.appclinica.repository.FhirObservationRepository;
-import com.proyecto.appclinica.repository.FhirPatientRepository;
 import com.proyecto.appclinica.service.SymptomDiaryService;
 import com.proyecto.appclinica.util.IntensityCode;
-import com.proyecto.appclinica.util.PatientUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.r4.model.*;
@@ -29,24 +28,14 @@ import java.util.Map;
 public class SymptomDiaryServiceImpl implements SymptomDiaryService {
 
     private final FhirObservationRepository observationRepository;
-    private final FhirPatientRepository fhirPatientRepository;
 
     // URLs para extensiones personalizadas
     private static final String DURATION_URL = "http://example.org/fhir/StructureDefinition/duration";
 
     @Override
     public SymptomRecordDto createDiaryEntry(SymptomDto dto) {
-        // Obtiene el ID del paciente actual
-        String patientId;
-
-        if (dto.getIdentifier() == null || dto.getIdentifier().isEmpty()) {
-            patientId = PatientUtils.getPatientId(fhirPatientRepository); // Usando la clase utilitaria
-        } else {
-            patientId = PatientUtils.getPatientIdForIdentifier(dto.getIdentifier(), fhirPatientRepository); // Usando la clase utilitaria
-        }
-
         // Crea la observación con los datos del síntoma
-        Observation observation = buildBaseObservation(patientId, dto);
+        Observation observation = buildBaseObservation(dto);
         addSymptomComponent(observation, dto);
 
         return observationRepository.createObservation(observation);
@@ -75,39 +64,27 @@ public class SymptomDiaryServiceImpl implements SymptomDiaryService {
     }
 
     @Override
-    public List<SymptomRecordDto> getAllPatientSymptomDiaries(String identifier) {
-        String patientId;
-
-        if (identifier == null || identifier.isEmpty()) {
-            patientId = PatientUtils.getPatientId(fhirPatientRepository); // Usando la clase utilitaria
-        } else {
-            patientId = PatientUtils.getPatientIdForIdentifier(identifier, fhirPatientRepository); // Usando la clase utilitaria
+    public List<SymptomRecordDto> getAllPatientSymptomDiaries(String patientId) {
+        if (patientId == null || patientId.isEmpty()) {
+            throw new InvalidRequestException("El ID del paciente no puede estar vacío o nulo.");
         }
 
-        // Buscar todas las observaciones de tipo "symptom-diary" del paciente
         return observationRepository.findSymptomObservationsByPatient(patientId);
     }
 
     @Override
-    public List<SymptomRecordDto> getPatientSymptomDiariesByDateRange(String identifier, LocalDate startDate, LocalDate endDate) {
-        String patientId;
-
-        if (identifier == null || identifier.isEmpty()) {
-            patientId = PatientUtils.getPatientId(fhirPatientRepository); // Usando la clase utilitaria
-        } else {
-            patientId = PatientUtils.getPatientIdForIdentifier(identifier, fhirPatientRepository); // Usando la clase utilitaria
+    public List<SymptomRecordDto> getPatientSymptomDiariesByDateRange(String patientId, LocalDate startDate, LocalDate endDate) {
+        if (patientId == null || patientId.isEmpty()) {
+            throw new InvalidRequestException("El ID del paciente no puede estar vacío o nulo.");
         }
 
         return observationRepository.findSymptomObservationsByPatientAndDateRange(patientId, startDate, endDate);
     }
 
     @Override
-    public List<SymptomRecordDto> getTodaySymptomsByPatient(String identifier) {
-        String patientId;
-        if (identifier == null || identifier.isEmpty()) {
-            patientId = PatientUtils.getPatientId(fhirPatientRepository); // Usando la clase utilitaria
-        } else {
-            patientId = PatientUtils.getPatientIdForIdentifier(identifier, fhirPatientRepository); // Usando la clase utilitaria
+    public List<SymptomRecordDto> getTodaySymptomsByPatient(String patientId) {
+        if (patientId == null || patientId.isEmpty()) {
+            throw new InvalidRequestException("El ID del paciente no puede estar vacío o nulo.");
         }
 
         return observationRepository.getTodaySymptomsByPatient(patientId);
@@ -131,7 +108,7 @@ public class SymptomDiaryServiceImpl implements SymptomDiaryService {
     /**
      * Crea una instancia base de Observation a partir del DTO.
      */
-    private Observation buildBaseObservation(String patientId, SymptomDto dto) {
+    private Observation buildBaseObservation(SymptomDto dto) {
         Observation obs = new Observation();
         obs.setStatus(Observation.ObservationStatus.FINAL);
 
@@ -142,7 +119,7 @@ public class SymptomDiaryServiceImpl implements SymptomDiaryService {
         obs.getCode().addCoding().setSystem(FhirConstants.LOINC).setCode("symptom-diary").setDisplay("Registro de síntoma");
 
         // Establecer al paciente como sujeto de la observación
-        obs.getSubject().setReference("Patient/" + patientId);
+        obs.getSubject().setReference("Patient/" + dto.getPatientId());
 
         // Establecer la fecha de efectividad
         obs.setEffective(new DateTimeType(dto.getDate()));
@@ -198,19 +175,6 @@ public class SymptomDiaryServiceImpl implements SymptomDiaryService {
         if (dto.getDuration() != null) {
             comp.addExtension().setUrl(DURATION_URL).setValue(new IntegerType(dto.getDuration()));
         }
-    }
-
-    /**
-     * Convierte una lista de Observation FHIR en una lista de SymptomRecordDto.
-     */
-    private List<SymptomRecordDto> convertObservationsToSymptomRecords(List<Observation> observations) {
-        List<SymptomRecordDto> entries = new ArrayList<>();
-        if (observations == null || observations.isEmpty()) return entries;
-
-        for (Observation obs : observations) {
-            entries.add(convertObservationToSymptomRecord(obs));
-        }
-        return entries;
     }
 
     /**

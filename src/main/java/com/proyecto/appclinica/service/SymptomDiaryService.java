@@ -28,23 +28,23 @@ public interface SymptomDiaryService {
      * Obtiene todos los registros de síntomas para un paciente
      * @return Lista de todos los síntomas registrados
      */
-    List<SymptomRecordDto> getAllPatientSymptomDiaries(String identifier);
+    List<SymptomRecordDto> getAllPatientSymptomDiaries(String patientId);
 
     /**
      * Obtiene los registros de síntomas para un paciente en un rango de fechas
-     * @param identifier Identificador del paciente
+     * @param patientId ID del paciente
      * @param startDate Fecha inicial inclusive
      * @param endDate Fecha final inclusive
      * @return Lista de síntomas registrados en el rango especificado
      */
-    List<SymptomRecordDto> getPatientSymptomDiariesByDateRange(String identifier ,LocalDate startDate, LocalDate endDate);
+    List<SymptomRecordDto> getPatientSymptomDiariesByDateRange(String patientId, LocalDate startDate, LocalDate endDate);
 
     /**
      * Obtiene los síntomas registrados por un paciente en el día actual
-     * @param identifier Identificador del paciente
+     * @param patientId ID del paciente
      * @return Lista de síntomas registrados hoy
      */
-    List<SymptomRecordDto> getTodaySymptomsByPatient(String identifier);
+    List<SymptomRecordDto> getTodaySymptomsByPatient(String patientId);
 
     /**
      * Obtiene un registro específico de síntoma por su ID
