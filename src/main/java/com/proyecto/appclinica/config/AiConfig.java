@@ -27,7 +27,7 @@ public class AiConfig {
     private final SosTool sosTool;
     private final QuestionAnswerAdvisor questionAnswerAdvisor;
 
-    @Value("classpath:prompts/general_chat")
+    @Value("classpath:prompts/general-chat")
     private Resource promptBase;
 
     @Value("classpath:prompts/ai-report-sos")
