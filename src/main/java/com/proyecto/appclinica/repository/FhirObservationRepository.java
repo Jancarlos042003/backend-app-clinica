@@ -2,6 +2,7 @@ package com.proyecto.appclinica.repository;
 
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import com.proyecto.appclinica.exception.ResourceNotFoundException;
@@ -86,12 +87,15 @@ public class FhirObservationRepository {
         return extractObservationsFromBundle(bundle);
     }
 
+    /**
+     * Obtiene síntomas que OCURRIERON hoy (por fecha efectiva del síntoma)
+     */
     public List<SymptomRecordDto> getTodaySymptomsByPatient(String patientId) {
         LocalDate today = LocalDate.now();
-        String startOfDay = today.atStartOfDay().format(ISO_DATE_TIME); // 00:00
-        String endOfDay = today.atTime(LocalTime.MAX).format(ISO_DATE_TIME); // 23:59:59.999999999
+        String startOfDay = today.atStartOfDay().format(ISO_DATE_TIME);
+        String endOfDay = today.atTime(LocalTime.MAX).format(ISO_DATE_TIME);
 
-        log.info("Buscando síntomas para el paciente {} desde {} hasta {}", patientId, startOfDay, endOfDay);
+        log.info("Buscando síntomas que OCURRIERON hoy ({}) para el paciente {}", today, patientId);
 
         Bundle bundle = fhirClient.search()
                 .forResource(Observation.class)
@@ -102,14 +106,43 @@ public class FhirObservationRepository {
                 .returnBundle(Bundle.class)
                 .execute();
 
-        log.info("Número de síntomas encontrados: {}", bundle.getTotal());
+        log.info("Número de síntomas que ocurrieron hoy: {}", bundle.getTotal());
 
         return extractObservationsFromBundle(bundle);
     }
 
+    /**
+     * Obtiene síntomas REGISTRADOS hoy (por fecha de creación en el sistema)
+     */
+    public List<SymptomRecordDto> getTodayRegisteredSymptomsByPatient(String patientId) {
+        LocalDate today = LocalDate.now();
+        String startOfDay = today.atStartOfDay().format(ISO_DATE_TIME);
+        String endOfDay = today.atTime(LocalTime.MAX).format(ISO_DATE_TIME);
+
+        log.info("Buscando síntomas REGISTRADOS hoy ({}) para el paciente {}", today, patientId);
+
+        Bundle bundle = fhirClient.search()
+                .forResource(Observation.class)
+                .where(new ReferenceClientParam("subject").hasId("Patient/" + patientId))
+                .and(new TokenClientParam("code").exactly().code("symptom-diary"))
+                .and(new DateClientParam("_lastUpdated").afterOrEquals().second(startOfDay))
+                .and(new DateClientParam("_lastUpdated").beforeOrEquals().second(endOfDay))
+                .returnBundle(Bundle.class)
+                .execute();
+
+        log.info("Número de síntomas registrados hoy: {}", bundle.getTotal());
+
+        return extractObservationsFromBundle(bundle);
+    }
+
+    /**
+     * Busca síntomas por fecha de OCURRENCIA (fecha efectiva del síntoma)
+     */
     public List<SymptomRecordDto> findSymptomObservationsByPatientAndDateRange(String patientId, LocalDate startDate, LocalDate endDate) {
         String startDateIso = startDate.atStartOfDay().format(ISO_DATE_TIME);
         String endDateIso = endDate.atTime(LocalTime.MAX).format(ISO_DATE_TIME);
+
+        log.info("Buscando síntomas que OCURRIERON entre {} y {} para paciente {}", startDate, endDate, patientId);
 
         Bundle bundle = fhirClient.search()
                 .forResource(Observation.class)
@@ -119,6 +152,31 @@ public class FhirObservationRepository {
                 .and(Observation.DATE.beforeOrEquals().day(endDateIso))
                 .returnBundle(Bundle.class)
                 .execute();
+
+        log.info("Número de síntomas encontrados por fecha de ocurrencia: {}", bundle.getTotal());
+
+        return extractObservationsFromBundle(bundle);
+    }
+
+    /**
+     * Busca síntomas por fecha de REGISTRO (fecha de creación en el sistema)
+     */
+    public List<SymptomRecordDto> findSymptomObservationsByPatientAndRegistrationDateRange(String patientId, LocalDate startDate, LocalDate endDate) {
+        String startDateIso = startDate.atStartOfDay().format(ISO_DATE_TIME);
+        String endDateIso = endDate.atTime(LocalTime.MAX).format(ISO_DATE_TIME);
+
+        log.info("Buscando síntomas REGISTRADOS entre {} y {} para paciente {}", startDate, endDate, patientId);
+
+        Bundle bundle = fhirClient.search()
+                .forResource(Observation.class)
+                .where(new ReferenceClientParam("subject").hasId("Patient/" + patientId))
+                .and(new TokenClientParam("code").exactly().code("symptom-diary"))
+                .and(new DateClientParam("_lastUpdated").afterOrEquals().day(startDateIso))
+                .and(new DateClientParam("_lastUpdated").beforeOrEquals().day(endDateIso))
+                .returnBundle(Bundle.class)
+                .execute();
+
+        log.info("Número de síntomas encontrados por fecha de registro: {}", bundle.getTotal());
 
         return extractObservationsFromBundle(bundle);
     }

@@ -102,6 +102,24 @@ public class SymptomDiaryServiceImpl implements SymptomDiaryService {
         observationRepository.deleteObservation(observationId);
     }
 
+    @Override
+    public List<SymptomRecordDto> getTodayRegisteredSymptomsByPatient(String patientId) {
+        if (patientId == null || patientId.isEmpty()) {
+            throw new InvalidRequestException("El ID del paciente no puede estar vacío o nulo.");
+        }
+
+        return observationRepository.getTodayRegisteredSymptomsByPatient(patientId);
+    }
+
+    @Override
+    public List<SymptomRecordDto> getPatientSymptomDiariesByRegistrationDateRange(String patientId, LocalDate startDate, LocalDate endDate) {
+        if (patientId == null || patientId.isEmpty()) {
+            throw new InvalidRequestException("El ID del paciente no puede estar vacío o nulo.");
+        }
+
+        return observationRepository.findSymptomObservationsByPatientAndRegistrationDateRange(patientId, startDate, endDate);
+    }
+
 
     // ==== MÉTODOS PRIVADOS DE APOYO ====
 
