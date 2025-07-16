@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MedicationRepository extends JpaRepository<MedicationEntity, Integer> {
+public interface MedicationRepository extends JpaRepository<MedicationEntity, Long> {
 
     List<MedicationEntity> findAllByPatientIdAndTimeOfTakingBetween(
             String patientId, Timestamp startTime, Timestamp endTime);
