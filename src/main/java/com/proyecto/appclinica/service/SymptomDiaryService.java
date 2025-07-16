@@ -58,4 +58,20 @@ public interface SymptomDiaryService {
      * @param observationId ID del recurso Observation a eliminar
      */
     void deleteSymptomDiary(String observationId);
+
+    /**
+     * Obtiene los síntomas registrados por un paciente en el día actual (por fecha de creación)
+     * @param patientId ID del paciente
+     * @return Lista de síntomas registrados hoy en el sistema
+     */
+    List<SymptomRecordDto> getTodayRegisteredSymptomsByPatient(String patientId);
+
+    /**
+     * Obtiene los registros de síntomas para un paciente en un rango de fechas (por fecha de registro)
+     * @param patientId ID del paciente
+     * @param startDate Fecha inicial inclusive
+     * @param endDate Fecha final inclusive
+     * @return Lista de síntomas registrados en el sistema en el rango especificado
+     */
+    List<SymptomRecordDto> getPatientSymptomDiariesByRegistrationDateRange(String patientId, LocalDate startDate, LocalDate endDate);
 }

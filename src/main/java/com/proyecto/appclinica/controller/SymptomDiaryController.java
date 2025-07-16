@@ -72,4 +72,21 @@ public class SymptomDiaryController {
         symptomDiaryService.deleteSymptomDiary(observationId);
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/patient/{patientId}/todays-registered-symptoms")
+    public ResponseEntity<List<SymptomRecordDto>> getTodayRegisteredSymptomsByPatient(
+            @PathVariable String patientId) {
+        List<SymptomRecordDto> todayRegisteredSymptoms = symptomDiaryService.getTodayRegisteredSymptomsByPatient(patientId);
+        return ResponseEntity.ok(todayRegisteredSymptoms);
+    }
+
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/patient/{patientId}/registration-date-range")
+    public ResponseEntity<List<SymptomRecordDto>> getPatientDiariesByRegistrationDateRange(
+            @PathVariable String patientId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ResponseEntity.ok(symptomDiaryService.getPatientSymptomDiariesByRegistrationDateRange(patientId, startDate, endDate));
+    }
 }
