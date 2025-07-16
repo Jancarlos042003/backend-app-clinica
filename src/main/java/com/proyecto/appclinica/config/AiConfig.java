@@ -1,9 +1,6 @@
 package com.proyecto.appclinica.config;
 
-import com.proyecto.appclinica.tool.MedicationTool;
-import com.proyecto.appclinica.tool.SosTool;
-import com.proyecto.appclinica.tool.SymptomTool;
-import com.proyecto.appclinica.tool.TreatmentTool;
+import com.proyecto.appclinica.tool.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
@@ -25,6 +22,7 @@ public class AiConfig {
     private final TreatmentTool treatmentTool;
     private final MedicationTool medicationTool;
     private final SosTool sosTool;
+    private final DateTimeTool dateTimeTool;
     private final QuestionAnswerAdvisor questionAnswerAdvisor;
 
     @Value("classpath:prompts/general-chat")
@@ -39,7 +37,7 @@ public class AiConfig {
     public ChatClient chatClient() {
         return ChatClient.builder(chatModel)
                 .defaultAdvisors(questionAnswerAdvisor)
-                .defaultTools(symptomTool, treatmentTool, medicationTool)
+                .defaultTools(symptomTool, treatmentTool, medicationTool, dateTimeTool)
                 .defaultSystem(promptBase)
                 .build();
     }
