@@ -35,27 +35,27 @@ public class SymptomDiaryController {
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/patient/{identifier}")
+    @GetMapping("/patient/{patientId}")
     public ResponseEntity<List<SymptomRecordDto>> getAllPatientDiaries(
-            @PathVariable String identifier) {
-        List<SymptomRecordDto> entries = symptomDiaryService.getAllPatientSymptomDiaries(identifier);
+            @PathVariable String patientId) {
+        List<SymptomRecordDto> entries = symptomDiaryService.getAllPatientSymptomDiaries(patientId);
         return ResponseEntity.ok(entries);
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/patient/{identifier}/date-range")
+    @GetMapping("/patient/{patientId}/date-range")
     public ResponseEntity<List<SymptomRecordDto>> getPatientDiariesByDateRange(
-            @PathVariable String identifier,
+            @PathVariable String patientId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return ResponseEntity.ok(symptomDiaryService.getPatientSymptomDiariesByDateRange(identifier, startDate, endDate));
+        return ResponseEntity.ok(symptomDiaryService.getPatientSymptomDiariesByDateRange(patientId, startDate, endDate));
     }
 
     @PreAuthorize("hasRole('PATIENT')")
-    @GetMapping("/patient/{identifier}/todays-symptoms")
+    @GetMapping("/patient/{patientId}/todays-symptoms")
     public ResponseEntity<List<SymptomRecordDto>> getTodaySymptomsByPatient(
-            @PathVariable String identifier) {
-        List<SymptomRecordDto> todaySymptoms = symptomDiaryService.getTodaySymptomsByPatient(identifier);
+            @PathVariable String patientId) {
+        List<SymptomRecordDto> todaySymptoms = symptomDiaryService.getTodaySymptomsByPatient(patientId);
         return ResponseEntity.ok(todaySymptoms);
     }
 
