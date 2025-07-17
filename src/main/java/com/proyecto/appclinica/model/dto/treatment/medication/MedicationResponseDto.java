@@ -5,6 +5,7 @@ public record MedicationResponseDto(
         String nameMedicine,
         String doses, // e.g., "2 mg", "1 tablet"
         String timeOfTaking, // e.g., "08:15", "12:30", "16:00", "20:45", "23:00"
+        String date, // e.g., "2025-07-17"
         String status // e.g., "Activo", "Completado", "No tomado", "Introducido en error", "Intencionado", "Detenido", "En espera", "Desconocido"
 ) {
 }

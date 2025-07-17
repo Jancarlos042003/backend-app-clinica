@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -32,7 +33,10 @@ public class MedicationEntity {
     @Column(name = "time_of_taking", nullable = false)
     private Timestamp timeOfTaking;
 
-    @Column(name = "patient_id")
+    @Column(name = "date", nullable = false)
+    private LocalDate date;
+
+    @Column(name = "patient_id", nullable = false)
     private String patientId;
 
     @Column(name = "medication_request_id")

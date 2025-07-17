@@ -97,7 +97,7 @@ public class SymptomTool {
         }
     }
 
-    @Tool(name = "get_today_symptoms", description = "Obtiene los síntomas registrados del paciente en el día actual.")
+    @Tool(name = "get_today_symptoms", description = "Obtiene los síntomas del paciente que ocurrieron en el día actual (por fecha del síntoma).")
     public List<SymptomRecordDto> getTodaySymptoms(String patientId) {
         try {
             // Usar el servicio para obtener los síntomas del día actual
@@ -108,7 +108,18 @@ public class SymptomTool {
         }
     }
 
-    @Tool(name = "get_symptoms_by_date_range", description = "Obtiene los síntomas registrados del paciente en un rango de fechas. " +
+    @Tool(name = "get_today_registered_symptoms", description = "Obtiene los síntomas del paciente que fueron registrados en el sistema hoy (por fecha de registro).")
+    public List<SymptomRecordDto> getTodayRegisteredSymptoms(String patientId) {
+        try {
+            // Usar el servicio para obtener los síntomas registrados hoy en el sistema
+            return symptomDiaryService.getTodayRegisteredSymptomsByPatient(patientId);
+        } catch (Exception e) {
+            log.error("Error al obtener síntomas registrados hoy: {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    @Tool(name = "get_symptoms_by_date_range", description = "Obtiene los síntomas del paciente que ocurrieron en un rango de fechas específico (por fecha del síntoma). " +
             "Formato de fecha: yyyy-MM-dd")
     public List<SymptomRecordDto> getSymptomsByDateRange(String startDate, String endDate, String patientId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -123,6 +134,25 @@ public class SymptomTool {
             return new ArrayList<>();
         } catch (Exception e) {
             log.error("Error al obtener síntomas por rango de fechas: {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    @Tool(name = "get_symptoms_by_registration_date_range", description = "Obtiene los síntomas del paciente que fueron registrados en el sistema en un rango de fechas específico (por fecha de registro). " +
+            "Formato de fecha: yyyy-MM-dd")
+    public List<SymptomRecordDto> getSymptomsByRegistrationDateRange(String startDate, String endDate, String patientId) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        try {
+            LocalDate start = LocalDate.parse(startDate, formatter);
+            LocalDate end = LocalDate.parse(endDate, formatter);
+
+            return symptomDiaryService.getPatientSymptomDiariesByRegistrationDateRange(patientId, start, end);
+        } catch (DateTimeParseException e) {
+            log.error("Error en formato de fechas: {}", e.getMessage());
+            return new ArrayList<>();
+        } catch (Exception e) {
+            log.error("Error al obtener síntomas por rango de fechas de registro: {}", e.getMessage());
             return new ArrayList<>();
         }
     }
