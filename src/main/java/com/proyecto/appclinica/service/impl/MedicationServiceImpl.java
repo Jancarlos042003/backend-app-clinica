@@ -218,11 +218,15 @@ public class MedicationServiceImpl implements MedicationService {
         // Formateamos la hora como "HH:mm"
         String formattedTime = entity.getTimeOfTaking().toLocalDateTime().format(timeFormatter);
 
+        // Formateamos la fecha como "yyyy-MM-dd" (formato ISO)
+        String formattedDate = entity.getDate().toString();
+
         return new MedicationResponseDto(
                 entity.getId(),
                 entity.getNameMedicine(),
                 formattedDose,
                 formattedTime,
+                formattedDate,
                 entity.getStatus().getDescription()
         );
     }

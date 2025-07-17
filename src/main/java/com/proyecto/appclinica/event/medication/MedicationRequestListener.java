@@ -53,7 +53,9 @@ public class MedicationRequestListener {
 
                 schedule.forEach(s -> {
                     MedicationEntity medication = createMedication(medicationRequest);
-                    medication.setTimeOfTaking(Timestamp.from(Instant.ofEpochSecond(s)));
+                    Instant instant = Instant.ofEpochSecond(s);
+                    medication.setTimeOfTaking(Timestamp.from(instant));
+                    medication.setDate(instant.atZone(ZoneId.systemDefault()).toLocalDate());
                     medicationRepository.save(medication);
                 });
             }
@@ -127,6 +129,7 @@ public class MedicationRequestListener {
 
                 MedicationEntity medication = createMedication(request);
                 medication.setTimeOfTaking(Timestamp.from(medicationTime));
+                medication.setDate(currentDate);
                 medication.setSchedulePattern(time.format(DateTimeFormatter.ofPattern("HH:mm")));
                 medicationRepository.save(medication);
             }
@@ -182,6 +185,7 @@ public class MedicationRequestListener {
 
                 MedicationEntity medication = createMedication(request);
                 medication.setTimeOfTaking(Timestamp.from(medicationTime));
+                medication.setDate(currentDate);
                 medication.setIrregular(true);
                 medication.setSchedulePattern(pattern.name());
                 medicationRepository.save(medication);
