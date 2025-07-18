@@ -46,17 +46,18 @@ public class AlertSosCreateEventListener {
         }
 
         emergencyContact.forEach(contact -> {
-            String message = String.format("""
-                            🚨 Alerta SOS del paciente %s: \
-                            
-                             DNI: %s \
-                            
-                             Fecha y Hora: %s \
-                            
-                             Dirección: %s \
-                            
-                             Mensaje: %s""",
-                    fullName, dni, formattedDateTime, address, patientMessage);
+//            String message = String.format("""
+//                            🚨 Alerta SOS del paciente %s: \
+//
+//                             DNI: %s \
+//
+//                             Fecha y Hora: %s \
+//
+//                             Dirección: %s \
+//
+//                             Mensaje: %s""",
+//                    fullName, dni, formattedDateTime, address, patientMessage);
+            String message = String.format("SOS");
 
 
             smsService.sendSms(contact.getPhoneNumber(), message);
