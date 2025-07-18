@@ -73,7 +73,7 @@ public class SosServiceImpl implements SosService {
         UserSettings userSettings = userSettingsRepository.findByPatientId(patient.getPatientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Configuración de usuario no encontrada para el paciente con ID: " + patient.getPatientId()));
 
-        // ⚠️ Forzar la carga de emergencyContacts mientras aún estás en la sesión activa
+        // Forzar la carga de emergencyContacts mientras aún estás en la sesión activa
         userSettings.getEmergencyContacts().size(); // O usar Hibernate.initialize(userSettings.getEmergencyContacts())
 
         // Publicar evento para notificar a los contactos de emergencia
@@ -118,7 +118,7 @@ public class SosServiceImpl implements SosService {
 
     @Override
     public List<SosResponse> getSosByPatientId(String patientId) {
-        PatientEntity patient = patientRepository.findById(Long.valueOf(patientId))
+        PatientEntity patient = patientRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro SOS", "ID del paciente", patientId));
 
         List<SosEntity> sosEntities = sosRepository.findByPatientId(patient.getPatientId());
