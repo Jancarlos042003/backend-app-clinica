@@ -10,11 +10,9 @@ import com.proyecto.appclinica.model.entity.EMedicationStatementStatus;
 import com.proyecto.appclinica.model.entity.MedicationEntity;
 import com.proyecto.appclinica.model.entity.MedicationSettings;
 import com.proyecto.appclinica.model.entity.UserSettings;
-import com.proyecto.appclinica.repository.FhirPatientRepository;
 import com.proyecto.appclinica.repository.MedicationRepository;
 import com.proyecto.appclinica.repository.UserSettingsRepository;
 import com.proyecto.appclinica.service.MedicationService;
-import com.proyecto.appclinica.util.PatientUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -26,11 +24,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +32,6 @@ import java.util.Optional;
 public class MedicationServiceImpl implements MedicationService {
 
     private final MedicationRepository medicationRepository;
-    private final FhirPatientRepository fhirPatientRepository;
     private final UserSettingsRepository userSettingsRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -146,7 +139,7 @@ public class MedicationServiceImpl implements MedicationService {
                 eventPublisher.publishEvent(new MedicationCompletedEvent(medication, medication.getPatientId()));
                 reminderAttempts.remove(medication.getMedicationRequestId());
             }
-        } catch (IllegalArgumentException  e) {
+        } catch (IllegalArgumentException e) {
             throw new StatusException("Estado de medicamento no válido: " + updateDto.status());
         }
 
@@ -190,11 +183,15 @@ public class MedicationServiceImpl implements MedicationService {
             // Calculamos los minutos desde la hora programada
             long minutesElapsed = ChronoUnit.MINUTES.between(scheduledTime, now);
 
-            // Si ha pasado la ventana de tolerancia y está en estado INTENDED
+            // Solo marcamos como NOT_TAKEN si ha pasado la ventana de tolerancia y está en estado INTENDED
             if (minutesElapsed > toleranceWindowMinutes) {
                 // Actualizamos el estado a NOT_TAKEN
                 medication.setStatus(EMedicationStatementStatus.NOT_TAKEN);
                 medicationRepository.save(medication);
+
+                // Log para depuración
+                log.info("Medicamento {} marcado como NOT_TAKEN. Tiempo programado: {}, minutos transcurridos: {}, ventana de tolerancia: {}",
+                        medication.getId(), scheduledTime, minutesElapsed, toleranceWindowMinutes);
             }
         }
     }

@@ -24,6 +24,7 @@ public class AiConfig {
     private final SosTool sosTool;
     private final DateTimeTool dateTimeTool;
     private final QuestionAnswerAdvisor questionAnswerAdvisor;
+    private final EmergencyContactTool emergencyContactTool;
 
     @Value("classpath:prompts/general-chat")
     private Resource promptBase;
@@ -47,7 +48,7 @@ public class AiConfig {
     public ChatClient sosChatClient() {
         return ChatClient.builder(chatModel)
                 .defaultAdvisors(questionAnswerAdvisor)
-                .defaultTools(symptomTool, treatmentTool, medicationTool, sosTool)
+                .defaultTools(symptomTool, treatmentTool, medicationTool, sosTool, dateTimeTool, emergencyContactTool)
                 .defaultSystem(promptAiReportSos)
                 .build();
     }
