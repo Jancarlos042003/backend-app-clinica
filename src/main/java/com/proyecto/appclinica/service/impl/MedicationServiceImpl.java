@@ -10,11 +10,9 @@ import com.proyecto.appclinica.model.entity.EMedicationStatementStatus;
 import com.proyecto.appclinica.model.entity.MedicationEntity;
 import com.proyecto.appclinica.model.entity.MedicationSettings;
 import com.proyecto.appclinica.model.entity.UserSettings;
-import com.proyecto.appclinica.repository.FhirPatientRepository;
 import com.proyecto.appclinica.repository.MedicationRepository;
 import com.proyecto.appclinica.repository.UserSettingsRepository;
 import com.proyecto.appclinica.service.MedicationService;
-import com.proyecto.appclinica.util.PatientUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,13 +22,11 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +34,6 @@ import java.util.Optional;
 public class MedicationServiceImpl implements MedicationService {
 
     private final MedicationRepository medicationRepository;
-    private final FhirPatientRepository fhirPatientRepository;
     private final UserSettingsRepository userSettingsRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -146,7 +141,7 @@ public class MedicationServiceImpl implements MedicationService {
                 eventPublisher.publishEvent(new MedicationCompletedEvent(medication, medication.getPatientId()));
                 reminderAttempts.remove(medication.getMedicationRequestId());
             }
-        } catch (IllegalArgumentException  e) {
+        } catch (IllegalArgumentException e) {
             throw new StatusException("Estado de medicamento no válido: " + updateDto.status());
         }
 
@@ -159,11 +154,15 @@ public class MedicationServiceImpl implements MedicationService {
 
     @Override
     public void checkPendingMedications() {
-        // Obtenemos la fecha y hora actual
-        LocalDateTime now = LocalDateTime.now();
+        // Definimos explícitamente la zona horaria que usaremos para todas las operaciones
+        ZoneId zoneId = ZoneId.of("America/Lima");
+
+        // Obtenemos la fecha y hora actual en la zona horaria definida
+        ZonedDateTime nowZoned = ZonedDateTime.now(zoneId);
+        LocalDateTime now = nowZoned.toLocalDateTime();
 
         // Obtenemos medicamentos activos de hoy hasta ahora
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(zoneId);
         LocalDateTime startOfDay = today.atStartOfDay();
         Timestamp startTimestamp = Timestamp.valueOf(startOfDay);
         Timestamp nowTimestamp = Timestamp.valueOf(now);
@@ -175,7 +174,9 @@ public class MedicationServiceImpl implements MedicationService {
         for (MedicationEntity medication : activeMedications) {
             String patientId = medication.getPatientId();
 
-            LocalDateTime scheduledTime = medication.getTimeOfTaking().toLocalDateTime();
+            // Convertimos el timestamp a LocalDateTime y luego a ZonedDateTime en nuestra zona horaria
+            LocalDateTime scheduledLocalTime = medication.getTimeOfTaking().toLocalDateTime();
+            ZonedDateTime scheduledTime = scheduledLocalTime.atZone(zoneId);
 
             // Obtenemos la configuración de medicamentos del usuario
             Optional<UserSettings> userSettingsOpt = userSettingsRepository.findByPatientId(patientId);
@@ -187,14 +188,22 @@ public class MedicationServiceImpl implements MedicationService {
 
             int toleranceWindowMinutes = medicationSettings.getToleranceWindowMinutes();
 
-            // Calculamos los minutos desde la hora programada
-            long minutesElapsed = ChronoUnit.MINUTES.between(scheduledTime, now);
+            // Calculamos los minutos desde la hora programada usando ZonedDateTime para asegurar
+            // que la comparación sea correcta considerando la zona horaria
+            long minutesElapsed = ChronoUnit.MINUTES.between(scheduledTime, nowZoned);
 
-            // Si ha pasado la ventana de tolerancia y está en estado INTENDED
+            // Solo marcamos como NOT_TAKEN si ha pasado la ventana de tolerancia y está en estado INTENDED
             if (minutesElapsed > toleranceWindowMinutes) {
                 // Actualizamos el estado a NOT_TAKEN
                 medication.setStatus(EMedicationStatementStatus.NOT_TAKEN);
                 medicationRepository.save(medication);
+
+                // Log para depuración
+                log.info("Medicamento {} marcado como NOT_TAKEN. Tiempo programado: {}, minutos transcurridos: {}, ventana de tolerancia: {}",
+                        medication.getId(), scheduledTime, minutesElapsed, toleranceWindowMinutes);
+            } else {
+                log.debug("Medicamento {} aún dentro de la ventana de tolerancia. Minutos transcurridos: {}, ventana: {}",
+                        medication.getId(), minutesElapsed, toleranceWindowMinutes);
             }
         }
     }
