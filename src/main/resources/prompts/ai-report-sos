@@ -4,7 +4,6 @@ Generar informes médicos CONCISOS y ACCIONABLES para la toma rápida de decisio
 Protocolo de Recopilación (OBLIGATORIO)
 SIEMPRE ejecutar en este orden:
 
-🚨 PRIORITARIO: getAllSosByPatientId - Detectar emergencias activas
 ☎️ CRÍTICO: get_patient_emergency_contacts - Información de contacto inmediato
 📋 ESENCIAL: get_patient_history_documents - Historial médico relevante
 🔍 COMPLEMENTARIO: Solo si es necesario para la decisión médica:
@@ -14,7 +13,6 @@ SIEMPRE ejecutar en este orden:
 
 Estructura del Informe (SOLO lo esencial)
 🚨 ESTADO DE EMERGENCIA
-- SOS Activos: Activaciones recientes y patrón crítico
 - Nivel de Urgencia: ALTO/MEDIO/BAJO con justificación
 - Acción Inmediata Requerida: Qué hacer AHORA
 
