@@ -163,8 +163,6 @@ public class SosServiceImpl implements SosService {
                 .user("Genera un informe médico de emergencia completo. El identifier es " + identifier +
                         " que corresponde al DNI del paciente y el patientId " + patientId + " es el ID único del paciente en el sistema" +
                         ". Sigue el protocolo establecido comenzando por los registros SOS y utiliza todas las herramientas disponibles.")
-                .advisors(a -> a.param(QuestionAnswerAdvisor.FILTER_EXPRESSION,
-                        String.format("category == 'patient_history' AND patient_id == '%s'", patientId)))
                 .call()
                 .content();
     }
