@@ -143,8 +143,12 @@ public class CodeVerificationService {
         SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder(CODE_LENGTH);
 
-        for (int i = 0; i < CODE_LENGTH; i++) {
-            sb.append(random.nextInt(10)); // Dígitos 0-9
+        // Primer dígito: 1-9 (nunca 0)
+        sb.append(random.nextInt(9) + 1);
+        
+        // Resto de dígitos: 0-9
+        for (int i = 1; i < CODE_LENGTH; i++) {
+            sb.append(random.nextInt(10));
         }
         return sb.toString();
     }

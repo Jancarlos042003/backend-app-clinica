@@ -55,7 +55,7 @@ public class UserSettingsMapper {
         return EmergencyContactResponseDTO.builder()
                 .id(entity.getId())
                 .name(entity.getName())
-                .phoneNumber(entity.getPhoneNumber())
+                .phoneNumber(entity.getPhoneNumber().replace("+51", "")) // Eliminar código de país
                 .relationship(entity.getRelationship())
                 .build();
     }
