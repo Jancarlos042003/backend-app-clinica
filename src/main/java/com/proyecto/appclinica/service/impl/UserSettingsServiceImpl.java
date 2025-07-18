@@ -102,11 +102,16 @@ public class UserSettingsServiceImpl implements UserSettingsService {
     @Override
     public EmergencyContactResponseDTO addEmergencyContact(String patientId, EmergencyContactCreateDTO contactDTO) {
         UserSettings userSettings = getUserSettings(patientId);
+        String countryCode = "+51"; // Código de país para Perú
+        String fullPhoneNumber = countryCode + contactDTO.getPhoneNumber();
 
         // Validar el número de teléfono
         if (!isValidPhoneNumber(contactDTO.getPhoneNumber())) {
             throw new InvalidRequestException("El número de teléfono debe comenzar con 9 y tener 9 dígitos");
         }
+
+        // Actualizamos el valor con el código de país
+        contactDTO.setPhoneNumber(fullPhoneNumber);
 
         // Validar que el usuario no tenga ya este número
         boolean phoneExists = userSettings.getEmergencyContacts().stream()
@@ -141,6 +146,8 @@ public class UserSettingsServiceImpl implements UserSettingsService {
     @Transactional
     public EmergencyContactResponseDTO updateEmergencyContact(String patientId, Long contactId, EmergencyContactCreateDTO updatedContactDTO) {
         UserSettings userSettings = getUserSettings(patientId);
+        String countryCode = "+51"; // Código de país para Perú
+        String fullPhoneNumber = countryCode + updatedContactDTO.getPhoneNumber();
 
         EmergencyContact contact = userSettings.getEmergencyContacts().stream()
                 .filter(c -> c.getId().equals(contactId))
@@ -148,7 +155,7 @@ public class UserSettingsServiceImpl implements UserSettingsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Contact", "ID", contactId));
 
         contact.setName(updatedContactDTO.getName());
-        contact.setPhoneNumber(updatedContactDTO.getPhoneNumber());
+        contact.setPhoneNumber(fullPhoneNumber);
         contact.setRelationship(updatedContactDTO.getRelationship());
 
         userSettingsRepository.save(userSettings);

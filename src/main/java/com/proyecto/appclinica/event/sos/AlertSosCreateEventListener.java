@@ -58,9 +58,9 @@ public class AlertSosCreateEventListener {
                              Mensaje: %s""",
                     fullName, dni, formattedDateTime, address, patientMessage);
 
-            log.info("Enviando SMS a {}: {}", contact.getPhoneNumber(), message);
 
-            // smsService.sendSms(contact.getPhoneNumber(), message);
+            smsService.sendSms(contact.getPhoneNumber(), message);
+            log.info("Enviando SMS a {}: {}", contact.getPhoneNumber(), message);
         });
     }
 }
