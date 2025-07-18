@@ -75,12 +75,12 @@ spring:
               enable: false
     default-encoding: UTF-8
 
-logging:
-  level:
-    root: INFO
-    org.springframework.web: DEBUG
-    org.springframework.ai: DEBUG
-    org.springframework.data.redis: DEBUG
+#logging:
+#  level:
+#    root: INFO
+#    org.springframework.web: DEBUG
+#    org.springframework.ai: DEBUG
+#    org.springframework.data.redis: DEBUG
 
 # Configuracion del servidor FHIR
 fhir:

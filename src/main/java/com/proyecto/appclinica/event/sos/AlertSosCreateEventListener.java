@@ -3,6 +3,7 @@ package com.proyecto.appclinica.event.sos;
 import com.proyecto.appclinica.model.entity.EmergencyContact;
 import com.proyecto.appclinica.model.entity.PatientEntity;
 import com.proyecto.appclinica.model.entity.SosEntity;
+import com.proyecto.appclinica.service.EmailService;
 import com.proyecto.appclinica.service.SmsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,19 +47,17 @@ public class AlertSosCreateEventListener {
         }
 
         emergencyContact.forEach(contact -> {
-//            String message = String.format("""
-//                            🚨 Alerta SOS del paciente %s: \
-//
-//                             DNI: %s \
-//
-//                             Fecha y Hora: %s \
-//
-//                             Dirección: %s \
-//
-//                             Mensaje: %s""",
-//                    fullName, dni, formattedDateTime, address, patientMessage);
-            String message = String.format("SOS");
+            String message = String.format("""
+                            🚨 Alerta SOS del paciente %s: \
 
+                             DNI: %s \
+
+                             Fecha y Hora: %s \
+
+                             Dirección: %s \
+
+                             Mensaje: %s""",
+                    fullName, dni, formattedDateTime, address, patientMessage);
 
             smsService.sendSms(contact.getPhoneNumber(), message);
             log.info("Enviando SMS a {}: {}", contact.getPhoneNumber(), message);

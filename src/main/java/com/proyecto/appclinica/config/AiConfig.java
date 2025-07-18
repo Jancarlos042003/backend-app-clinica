@@ -21,10 +21,10 @@ public class AiConfig {
     private final SymptomTool symptomTool;
     private final TreatmentTool treatmentTool;
     private final MedicationTool medicationTool;
-    private final SosTool sosTool;
     private final DateTimeTool dateTimeTool;
     private final QuestionAnswerAdvisor questionAnswerAdvisor;
     private final EmergencyContactTool emergencyContactTool;
+    private final PatientHistoryTool patientHistoryTool;
 
     @Value("classpath:prompts/general-chat")
     private Resource promptBase;
@@ -38,7 +38,7 @@ public class AiConfig {
     public ChatClient chatClient() {
         return ChatClient.builder(chatModel)
                 .defaultAdvisors(questionAnswerAdvisor)
-                .defaultTools(symptomTool, treatmentTool, medicationTool, dateTimeTool)
+                .defaultTools(symptomTool, treatmentTool, medicationTool, dateTimeTool, patientHistoryTool)
                 .defaultSystem(promptBase)
                 .build();
     }
@@ -48,7 +48,8 @@ public class AiConfig {
     public ChatClient sosChatClient() {
         return ChatClient.builder(chatModel)
                 .defaultAdvisors(questionAnswerAdvisor)
-                .defaultTools(symptomTool, treatmentTool, medicationTool, sosTool, dateTimeTool, emergencyContactTool)
+                .defaultTools(symptomTool, treatmentTool, medicationTool,
+                        dateTimeTool, emergencyContactTool, patientHistoryTool)
                 .defaultSystem(promptAiReportSos)
                 .build();
     }
